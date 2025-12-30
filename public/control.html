@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>TetraPod Control</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    input { padding: 5px; margin: 5px; width: 80%; }
+    label { display: block; margin-top: 15px; }
+    /* Applyボタンのスタイル調整 */
+    #applyBtn {
+      margin-top: 20px;
+      padding: 10px 20px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Control Panel</h1>
+    
+    <label>Reaction Color</label>
+    <input type="color" id="colorPicker">
+    
+    <label>Display Duration (ms)</label>
+    <input type="range" id="durationRange" min="100" max="3000" step="100">
+    <span id="durationVal"></span>
+
+    <label>Shake Sensitivity (Lower is more sensitive)</label>
+    <input type="number" id="shakeInput" value="15">
+
+    <button id="applyBtn" onclick="updateSettings()">Apply</button>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+    const colorPicker = document.getElementById('colorPicker');
+    const durationRange = document.getElementById('durationRange');
+    const shakeInput = document.getElementById('shakeInput');
+    const durationVal = document.getElementById('durationVal');
+    const applyBtn = document.getElementById('applyBtn'); // ボタンを取得
+
+    socket.on('configUpdate', (config) => {
+      colorPicker.value = config.reactionColor;
+      durationRange.value = config.displayDuration;
+      shakeInput.value = config.shakeSensitivity;
+      durationVal.innerText = config.displayDuration;
+    });
+
+    durationRange.addEventListener('input', (e) => {
+      durationVal.innerText = e.target.value;
+    });
+
+    function updateSettings() {
+      // 設定を送信
+      socket.emit('updateConfig', {
+        reactionColor: colorPicker.value,
+        displayDuration: parseInt(durationRange.value),
+        shakeSensitivity: parseInt(shakeInput.value)
+      });
+
+      // --- 👇 ここからフィードバック演出 👇 ---
+      const originalText = applyBtn.innerText;
+      const originalColor = applyBtn.style.backgroundColor;
+
+      // ボタンを「反映済み」状態にする
+      applyBtn.innerText = 'Applied! ✅';
+      applyBtn.style.backgroundColor = '#4CAF50'; // 緑色
+      applyBtn.style.color = 'white';
+      applyBtn.disabled = true; // 連打防止
+
+      // 1秒後に元に戻す
+      setTimeout(() => {
+        applyBtn.innerText = originalText;
+        applyBtn.style.backgroundColor = originalColor;
+        applyBtn.style.color = '';
+        applyBtn.disabled = false;
+      }, 1000);
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>TetraPod Input</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="container">
+    <div style="padding: 10px;">
+      <button id="permissionBtn" style="padding: 10px; display:none;">センサー許可 (iOS)</button>
+      <p style="font-size: 12px; color: #888;">Shake your phone!</p>
+    </div>
+    
+    <div class="btn-grid">
+      <button class="reaction-btn" onclick="sendReaction(1)">🔥</button>
+      <button class="reaction-btn" onclick="sendReaction(2)">❤️</button>
+      <button class="reaction-btn" onclick="sendReaction(3)">🙌</button>
+      <button class="reaction-btn" onclick="sendReaction(4)">🎉</button>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+
+    // リアクション送信
+    function sendReaction(id) {
+      socket.emit('reaction', { id: id });
+      // バイブレーション (Androidのみ対応の場合が多い)
+      if (navigator.vibrate) navigator.vibrate(50);
+    }
+
+    // シェイク検知 (簡易版)
+    let lastX, lastY, lastZ;
+    let speed;
+    const SHAKE_THRESHOLD = 15; // サーバー側の設定で上書き可能
+    let lastTime = 0;
+
+    function handleMotion(event) {
+      const current = event.accelerationIncludingGravity;
+      if(!current) return;
+      
+      const currentTime = new Date().getTime();
+      if ((currentTime - lastTime) > 100) {
+        const diffTime = currentTime - lastTime;
+        lastTime = currentTime;
+
+        if(lastX === undefined) {
+          lastX = current.x; lastY = current.y; lastZ = current.z;
+          return;
+        }
+
+        speed = Math.abs(current.x + current.y + current.z - lastX - lastY - lastZ) / diffTime * 10000;
+
+        if (speed > SHAKE_THRESHOLD) {
+          socket.emit('shake', { intensity: speed });
+          if (navigator.vibrate) navigator.vibrate(200);
+        }
+
+        lastX = current.x; lastY = current.y; lastZ = current.z;
+      }
+    }
+
+    // iOS 13+ 権限リクエスト
+    const btn = document.getElementById('permissionBtn');
+    if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
+      btn.style.display = 'block';
+      btn.addEventListener('click', () => {
+        DeviceMotionEvent.requestPermission()
+          .then(response => {
+            if (response === 'granted') {
+              window.addEventListener('devicemotion', handleMotion, true);
+              btn.style.display = 'none';
+            } else {
+              alert('許可されませんでした');
+            }
+          })
+          .catch(console.error);
+      });
+    } else {
+      window.addEventListener('devicemotion', handleMotion, true);
+    }
+  </script>
+</body>
+</html>

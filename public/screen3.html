@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>TetraPod Screen 3</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    body { transition: background-color 0.1s; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Screen 3 (Shake)</h1>
+    <h2 id="shakeStatus" style="font-size: 5rem; opacity: 0.3;">SHAKE IT</h2>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+    const status = document.getElementById('shakeStatus');
+    let timer = null;
+
+    socket.on('shakeTrigger', (data) => {
+      // シェイク強度に応じて演出
+      // 背景をフラッシュさせる
+      document.body.style.backgroundColor = '#333';
+      status.style.opacity = 1;
+      status.style.transform = `scale(${1 + Math.random()})`;
+
+      if(timer) clearTimeout(timer);
+      timer = setTimeout(() => {
+        document.body.style.backgroundColor = '#111';
+        status.style.opacity = 0.3;
+        status.style.transform = 'scale(1)';
+      }, 200);
+    });
+  </script>
+</body>
+</html>
