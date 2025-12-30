@@ -48,7 +48,7 @@ body {
 /* グリッド ＋ 画像背景用のクラス */
 .grid-bg {
   /* 画像が読み込めなかった時のための底色 */
-  background-color: #0a0a0a;
+  /* background-color: #0a0a0a; */
   
   /* 多重背景の指定（上にあるものが先に書かれる）
     1行目: 縦のグリッド線
@@ -56,8 +56,8 @@ body {
     3行目: 背景画像 (../img/bg.png) 
   */
   background-image: 
-    linear-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+    linear-gradient(rgba(255, 255, 255, 0.2) 1.5px, transparent 1.5px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.2) 1.5px, transparent 1.5px),
     url('../img/bg.png'); /* 👈 ここに画像のパスを指定 */
     
   /* それぞれの背景のサイズ指定
@@ -80,5 +80,5 @@ body {
     no-repeat;
     
   /* 画像が明るすぎる場合は、このフィルターで少し暗くしてグリッドを見やすくする */
-  background-blend-mode: overlay; 
+  /* background-blend-mode: overlay;  */
 }
