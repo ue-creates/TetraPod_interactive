@@ -45,3 +45,19 @@ body {
   transform: translate(-50%, -50%);
   pointer-events: none;
 }
+/* グリッド背景用のクラス */
+.grid-bg {
+  /* ベースの色（真っ黒より少し明るい黒にすると深みが出るよ） */
+  background-color: #0a0a0a;
+  
+  /* 縦と横の線を描画 */
+  background-image: 
+    linear-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+    
+  /* グリッドのサイズ（マスの大きさ） */
+  background-size: 50px 50px;
+  
+  /* グリッドが画面の中央から始まるように */
+  background-position: center center;
+}
