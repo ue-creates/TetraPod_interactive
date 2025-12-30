@@ -11,7 +11,7 @@ app.use(express.static('public'));
 // 設定の初期値
 let config = {
   reactionColor: '#00ff00',
-  shakeSensitivity: 15,
+  shakeSensitivity: 80,
   displayDuration: 1000
 };
 

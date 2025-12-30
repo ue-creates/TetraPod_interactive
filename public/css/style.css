@@ -45,19 +45,40 @@ body {
   transform: translate(-50%, -50%);
   pointer-events: none;
 }
-/* グリッド背景用のクラス */
+/* グリッド ＋ 画像背景用のクラス */
 .grid-bg {
-  /* ベースの色（真っ黒より少し明るい黒にすると深みが出るよ） */
+  /* 画像が読み込めなかった時のための底色 */
   background-color: #0a0a0a;
   
-  /* 縦と横の線を描画 */
+  /* 多重背景の指定（上にあるものが先に書かれる）
+    1行目: 縦のグリッド線
+    2行目: 横のグリッド線
+    3行目: 背景画像 (../img/bg.png) 
+  */
   background-image: 
     linear-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+    linear-gradient(90deg, rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+    url('../img/bg.png'); /* 👈 ここに画像のパスを指定 */
     
-  /* グリッドのサイズ（マスの大きさ） */
-  background-size: 50px 50px;
+  /* それぞれの背景のサイズ指定
+    グリッドは 50px 固定、画像は画面いっぱいに広げる (cover)
+  */
+  background-size: 
+    50px 50px,
+    50px 50px,
+    cover;
   
-  /* グリッドが画面の中央から始まるように */
+  /* 位置は中央合わせ */
   background-position: center center;
+  
+  /* 繰り返しの設定
+    グリッドは繰り返す (repeat)、画像は繰り返さない (no-repeat)
+  */
+  background-repeat: 
+    repeat,
+    repeat,
+    no-repeat;
+    
+  /* 画像が明るすぎる場合は、このフィルターで少し暗くしてグリッドを見やすくする */
+  background-blend-mode: overlay; 
 }
