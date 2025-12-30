@@ -5,13 +5,28 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>TetraPod Input</title>
   <link rel="stylesheet" href="css/style.css">
+  <style>
+    /* デバッグ表示用スタイル */
+    #debug-panel {
+      font-size: 10px;
+      color: #555;
+      margin-bottom: 10px;
+      font-family: monospace;
+      line-height: 1.2;
+    }
+  </style>
 </head>
 <body>
   <div class="container">
     <div style="padding: 10px;">
       <button id="permissionBtn" style="padding: 10px; display:none;">センサー許可 (iOS)</button>
       <p id="statusText" style="font-size: 12px; color: #888;">Shake your phone!</p>
+      
+      <div id="debug-panel">
+        Force: <span id="val-force">0</span><br>
+        Energy: <span id="val-energy">0</span> / Limit: <span id="val-limit">0</span>
       </div>
+    </div>
     
     <div class="btn-grid">
       <button class="reaction-btn" onclick="sendReaction(1)">🔥</button>
@@ -24,10 +39,15 @@
   <script src="/socket.io/socket.io.js"></script>
   <script>
     const socket = io();
-    let currentConfig = {}; 
+    // デフォルト感度設定（管理画面の値が来るまでの初期値）
+    // 数値が大きいほど「たくさん振らないと」反応しない
+    let currentConfig = { shakeSensitivity: 60 }; 
 
     socket.on('configUpdate', (config) => {
       currentConfig = config;
+      // 管理画面の数値（15とか）だとこのロジックには小さすぎるかもしれないので補正
+      // もし管理画面で「300」とか入れているならそのまま使う
+      document.getElementById('val-limit').innerText = currentConfig.shakeSensitivity;
     });
 
     function sendReaction(id) {
@@ -35,57 +55,67 @@
       if (navigator.vibrate) navigator.vibrate(50);
     }
 
-    // --- 👇 新しいシェイク検知ロジック (ハイパスフィルター) 👇 ---
+    // --- 👇 エネルギー蓄積型シェイク検知ロジック 👇 ---
+
+    let gravity = { x: 0, y: 0, z: 0 };
+    let shakeEnergy = 0; // バケツの水量
     
-    // 重力成分を保持する変数
-    let gravityX = 0, gravityY = 0, gravityZ = 0;
-    const ALPHA = 0.8; // 重力をどれくらい強く残すか (0.8 = 重力の影響を強く維持＝変化を滑らかに)
+    // 【調整パラメータ】
+    const MIN_FORCE = 8;   // ノイズ除去の閾値（これ以下の揺れは無視＝タイピング対策）
+    const DECAY_RATE = 2;  // 減衰スピード（振るのをやめたらどれくらい早く0に戻るか）
+    const COOL_DOWN = 800; // 発火後の不感時間
     
-    let lastShakeTime = 0;
-    const SHAKE_COOLDOWN = 800; // 連続反応を防ぐクールダウン (ms)
+    let lastFireTime = 0;
 
     function handleMotion(event) {
       const acc = event.accelerationIncludingGravity;
-      if(!acc) return;
+      if (!acc) return;
 
-      // 1. 初回のみ初期化
-      if (gravityX === 0 && gravityY === 0 && gravityZ === 0) {
-        gravityX = acc.x; gravityY = acc.y; gravityZ = acc.z;
-        return;
+      // 1. 重力成分の抽出 (簡易ローパスフィルタ)
+      const alpha = 0.8;
+      gravity.x = alpha * gravity.x + (1 - alpha) * acc.x;
+      gravity.y = alpha * gravity.y + (1 - alpha) * acc.y;
+      gravity.z = alpha * gravity.z + (1 - alpha) * acc.z;
+
+      // 2. 重力を除去して「動き」だけの力を計算
+      const x = acc.x - gravity.x;
+      const y = acc.y - gravity.y;
+      const z = acc.z - gravity.z;
+      
+      // 瞬間の力 (Force)
+      const force = Math.sqrt(x*x + y*y + z*z);
+
+      // 3. エネルギー蓄積ロジック
+      if (force > MIN_FORCE) {
+        // 閾値を超えた強い力だけをエネルギーとして足す
+        shakeEnergy += force;
       }
+      
+      // 常にエネルギーを減らす（減衰）
+      shakeEnergy -= DECAY_RATE;
+      if (shakeEnergy < 0) shakeEnergy = 0;
 
-      // 2. ローパスフィルター: ゆっくりした変化（重力・傾き）を抽出
-      gravityX = ALPHA * gravityX + (1 - ALPHA) * acc.x;
-      gravityY = ALPHA * gravityY + (1 - ALPHA) * acc.y;
-      gravityZ = ALPHA * gravityZ + (1 - ALPHA) * acc.z;
-
-      // 3. ハイパスフィルター: 全体の加速度から重力・傾き成分を引く
-      // これにより、純粋な「動き」による加速度だけが残る
-      const accelX = acc.x - gravityX;
-      const accelY = acc.y - gravityY;
-      const accelZ = acc.z - gravityZ;
-
-      // 4. ベクトルの大きさを計算 (XYZの合成値)
-      const force = Math.sqrt(accelX * accelX + accelY * accelY + accelZ * accelZ);
-
-      // デバッグ表示用 (調整が必要な時に使ってね)
-      // document.getElementById('debug').innerText = "Force: " + force.toFixed(2);
-
-      // 5. 判定
-      // タイピングなどの振動は force が 1~3 程度、強いシェイクは 15~30 以上になるはず
-      const threshold = (currentConfig.shakeSensitivity) ? currentConfig.shakeSensitivity : 20;
+      // --- デバッグ表示 ---
+      document.getElementById('val-force').innerText = force.toFixed(1);
+      document.getElementById('val-energy').innerText = shakeEnergy.toFixed(0);
+      
+      // 4. 判定
+      // 管理画面の数値を「満タン」の基準にする
+      // 目安: 50〜100くらいが適正範囲になるはず
+      const limit = currentConfig.shakeSensitivity || 60; 
       const now = Date.now();
 
-      if (force > threshold && (now - lastShakeTime > SHAKE_COOLDOWN)) {
-        
-        socket.emit('shake', { intensity: force });
-        lastShakeTime = now;
-        
+      if (shakeEnergy > limit && (now - lastFireTime > COOL_DOWN)) {
+        // 発火！
+        socket.emit('shake', { intensity: shakeEnergy });
+        lastFireTime = now;
+        shakeEnergy = 0; // バケツを空にする
+
+        // フィードバック
         const statusText = document.getElementById('statusText');
         statusText.innerText = "SHAKE DETECTED!!";
         statusText.style.color = "#fff";
         statusText.style.fontWeight = "bold";
-        
         if (navigator.vibrate) navigator.vibrate(200);
 
         setTimeout(() => {
@@ -96,6 +126,7 @@
       }
     }
 
+    // iOS 13+ 権限リクエスト
     const btn = document.getElementById('permissionBtn');
     if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
       btn.style.display = 'block';
