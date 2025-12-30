@@ -10,7 +10,7 @@
   <div class="container">
     <div style="padding: 10px;">
       <button id="permissionBtn" style="padding: 10px; display:none;">センサー許可 (iOS)</button>
-      <p style="font-size: 12px; color: #888;">Shake your phone!</p>
+      <p id="statusText" style="font-size: 12px; color: #888;">Shake your phone!</p>
     </div>
     
     <div class="btn-grid">
@@ -24,39 +24,75 @@
   <script src="/socket.io/socket.io.js"></script>
   <script>
     const socket = io();
+    let currentConfig = {}; // サーバーからの設定を保持
+
+    // 設定を受信
+    socket.on('configUpdate', (config) => {
+      currentConfig = config;
+    });
 
     // リアクション送信
     function sendReaction(id) {
       socket.emit('reaction', { id: id });
-      // バイブレーション (Androidのみ対応の場合が多い)
       if (navigator.vibrate) navigator.vibrate(50);
     }
 
-    // シェイク検知 (簡易版)
-    let lastX, lastY, lastZ;
-    let speed;
-    const SHAKE_THRESHOLD = 15; // サーバー側の設定で上書き可能
-    let lastTime = 0;
+    // --- 👇 シェイク検知ロジック改善版 👇 ---
+    
+    let lastX = null, lastY = null, lastZ = null;
+    let lastUpdate = 0;
+    let lastShakeTime = 0;
+    const SHAKE_COOLDOWN = 800; // 連続検知を防ぐ間隔 (ミリ秒) -> これで「離散的」にする
 
     function handleMotion(event) {
       const current = event.accelerationIncludingGravity;
       if(!current) return;
       
-      const currentTime = new Date().getTime();
-      if ((currentTime - lastTime) > 100) {
-        const diffTime = currentTime - lastTime;
-        lastTime = currentTime;
+      const currentTime = Date.now();
+      
+      // 約100msごとに判定（傾きのようなゆっくりした変化を無視し、急な動きだけ拾う）
+      if ((currentTime - lastUpdate) > 100) {
+        const diffTime = currentTime - lastUpdate;
+        lastUpdate = currentTime;
 
-        if(lastX === undefined) {
+        if(lastX === null) {
           lastX = current.x; lastY = current.y; lastZ = current.z;
           return;
         }
 
-        speed = Math.abs(current.x + current.y + current.z - lastX - lastY - lastZ) / diffTime * 10000;
+        // 3軸それぞれの変化量の絶対値を足す
+        // これにより「ある軸はプラス、ある軸はマイナス」で打ち消し合うのを防ぐ
+        const deltaX = Math.abs(current.x - lastX);
+        const deltaY = Math.abs(current.y - lastY);
+        const deltaZ = Math.abs(current.z - lastZ);
+        
+        // 動きの激しさ (Speed)
+        const speed = deltaX + deltaY + deltaZ;
 
-        if (speed > SHAKE_THRESHOLD) {
+        // 閾値 (Threshold): 設定画面の値を使う。なければデフォルト25
+        // ※「傾き」だけだと delta は小さい値になるので無視される
+        const threshold = (currentConfig.shakeSensitivity) ? currentConfig.shakeSensitivity : 25;
+
+        // 【判定】閾値を超えていて、かつ前回のシェイクから時間が経っているか？
+        if (speed > threshold && (currentTime - lastShakeTime > SHAKE_COOLDOWN)) {
+          
+          // シェイク検知！
           socket.emit('shake', { intensity: speed });
+          lastShakeTime = currentTime; // 最後に反応した時間を更新
+          
+          // フィードバック（文字を一瞬変えるなど）
+          const statusText = document.getElementById('statusText');
+          statusText.innerText = "SHAKE DETECTED!!";
+          statusText.style.color = "#fff";
+          statusText.style.fontWeight = "bold";
+          
           if (navigator.vibrate) navigator.vibrate(200);
+
+          setTimeout(() => {
+            statusText.innerText = "Shake your phone!";
+            statusText.style.color = "#888";
+            statusText.style.fontWeight = "normal";
+          }, 500);
         }
 
         lastX = current.x; lastY = current.y; lastZ = current.z;
