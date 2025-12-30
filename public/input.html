@@ -11,7 +11,7 @@
     <div style="padding: 10px;">
       <button id="permissionBtn" style="padding: 10px; display:none;">センサー許可 (iOS)</button>
       <p id="statusText" style="font-size: 12px; color: #888;">Shake your phone!</p>
-    </div>
+      </div>
     
     <div class="btn-grid">
       <button class="reaction-btn" onclick="sendReaction(1)">🔥</button>
@@ -24,82 +24,78 @@
   <script src="/socket.io/socket.io.js"></script>
   <script>
     const socket = io();
-    let currentConfig = {}; // サーバーからの設定を保持
+    let currentConfig = {}; 
 
-    // 設定を受信
     socket.on('configUpdate', (config) => {
       currentConfig = config;
     });
 
-    // リアクション送信
     function sendReaction(id) {
       socket.emit('reaction', { id: id });
       if (navigator.vibrate) navigator.vibrate(50);
     }
 
-    // --- 👇 シェイク検知ロジック改善版 👇 ---
+    // --- 👇 新しいシェイク検知ロジック (ハイパスフィルター) 👇 ---
     
-    let lastX = null, lastY = null, lastZ = null;
-    let lastUpdate = 0;
+    // 重力成分を保持する変数
+    let gravityX = 0, gravityY = 0, gravityZ = 0;
+    const ALPHA = 0.8; // 重力をどれくらい強く残すか (0.8 = 重力の影響を強く維持＝変化を滑らかに)
+    
     let lastShakeTime = 0;
-    const SHAKE_COOLDOWN = 800; // 連続検知を防ぐ間隔 (ミリ秒) -> これで「離散的」にする
+    const SHAKE_COOLDOWN = 800; // 連続反応を防ぐクールダウン (ms)
 
     function handleMotion(event) {
-      const current = event.accelerationIncludingGravity;
-      if(!current) return;
-      
-      const currentTime = Date.now();
-      
-      // 約100msごとに判定（傾きのようなゆっくりした変化を無視し、急な動きだけ拾う）
-      if ((currentTime - lastUpdate) > 100) {
-        const diffTime = currentTime - lastUpdate;
-        lastUpdate = currentTime;
+      const acc = event.accelerationIncludingGravity;
+      if(!acc) return;
 
-        if(lastX === null) {
-          lastX = current.x; lastY = current.y; lastZ = current.z;
-          return;
-        }
+      // 1. 初回のみ初期化
+      if (gravityX === 0 && gravityY === 0 && gravityZ === 0) {
+        gravityX = acc.x; gravityY = acc.y; gravityZ = acc.z;
+        return;
+      }
 
-        // 3軸それぞれの変化量の絶対値を足す
-        // これにより「ある軸はプラス、ある軸はマイナス」で打ち消し合うのを防ぐ
-        const deltaX = Math.abs(current.x - lastX);
-        const deltaY = Math.abs(current.y - lastY);
-        const deltaZ = Math.abs(current.z - lastZ);
+      // 2. ローパスフィルター: ゆっくりした変化（重力・傾き）を抽出
+      gravityX = ALPHA * gravityX + (1 - ALPHA) * acc.x;
+      gravityY = ALPHA * gravityY + (1 - ALPHA) * acc.y;
+      gravityZ = ALPHA * gravityZ + (1 - ALPHA) * acc.z;
+
+      // 3. ハイパスフィルター: 全体の加速度から重力・傾き成分を引く
+      // これにより、純粋な「動き」による加速度だけが残る
+      const accelX = acc.x - gravityX;
+      const accelY = acc.y - gravityY;
+      const accelZ = acc.z - gravityZ;
+
+      // 4. ベクトルの大きさを計算 (XYZの合成値)
+      const force = Math.sqrt(accelX * accelX + accelY * accelY + accelZ * accelZ);
+
+      // デバッグ表示用 (調整が必要な時に使ってね)
+      // document.getElementById('debug').innerText = "Force: " + force.toFixed(2);
+
+      // 5. 判定
+      // タイピングなどの振動は force が 1~3 程度、強いシェイクは 15~30 以上になるはず
+      const threshold = (currentConfig.shakeSensitivity) ? currentConfig.shakeSensitivity : 20;
+      const now = Date.now();
+
+      if (force > threshold && (now - lastShakeTime > SHAKE_COOLDOWN)) {
         
-        // 動きの激しさ (Speed)
-        const speed = deltaX + deltaY + deltaZ;
+        socket.emit('shake', { intensity: force });
+        lastShakeTime = now;
+        
+        const statusText = document.getElementById('statusText');
+        statusText.innerText = "SHAKE DETECTED!!";
+        statusText.style.color = "#fff";
+        statusText.style.fontWeight = "bold";
+        
+        if (navigator.vibrate) navigator.vibrate(200);
 
-        // 閾値 (Threshold): 設定画面の値を使う。なければデフォルト25
-        // ※「傾き」だけだと delta は小さい値になるので無視される
-        const threshold = (currentConfig.shakeSensitivity) ? currentConfig.shakeSensitivity : 25;
-
-        // 【判定】閾値を超えていて、かつ前回のシェイクから時間が経っているか？
-        if (speed > threshold && (currentTime - lastShakeTime > SHAKE_COOLDOWN)) {
-          
-          // シェイク検知！
-          socket.emit('shake', { intensity: speed });
-          lastShakeTime = currentTime; // 最後に反応した時間を更新
-          
-          // フィードバック（文字を一瞬変えるなど）
-          const statusText = document.getElementById('statusText');
-          statusText.innerText = "SHAKE DETECTED!!";
-          statusText.style.color = "#fff";
-          statusText.style.fontWeight = "bold";
-          
-          if (navigator.vibrate) navigator.vibrate(200);
-
-          setTimeout(() => {
-            statusText.innerText = "Shake your phone!";
-            statusText.style.color = "#888";
-            statusText.style.fontWeight = "normal";
-          }, 500);
-        }
-
-        lastX = current.x; lastY = current.y; lastZ = current.z;
+        setTimeout(() => {
+          statusText.innerText = "Shake your phone!";
+          statusText.style.color = "#888";
+          statusText.style.fontWeight = "normal";
+        }, 500);
       }
     }
 
-    // iOS 13+ 権限リクエスト
     const btn = document.getElementById('permissionBtn');
     if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
       btn.style.display = 'block';
