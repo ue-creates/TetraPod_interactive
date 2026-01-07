@@ -5,46 +5,51 @@
   <title>TetraPod Screen 1</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
-<body class="grid-bg">
-  <div class="container" id="visualArea">
-    <h1>Screen 2 (Reactions)</h1>
-  </div>
+<body>
+  
+  <div id="visualArea">
+    </div>
+
+  <div class="foreground-overlay"></div>
+
+  <h1 style="position:absolute; top:10px; left:20px; z-index:20; color:white; opacity:0.5;">
+    Screen 2
+  </h1>
 
   <script src="/socket.io/socket.io.js"></script>
   <script>
     const socket = io();
-    const area = document.getElementById('visualArea');
+    const area = document.getElementById('visualArea'); // スタンプはこの中に追加される
     let currentConfig = {};
 
     socket.on('configUpdate', (config) => currentConfig = config);
 
-    // リアクション受信時の処理
     socket.on('reactionTrigger', (data) => {
-      // 演出用の要素を生成
       const el = document.createElement('div');
       el.className = 'visual-object';
       
-      // ランダムな位置
       const x = Math.random() * window.innerWidth;
       const y = Math.random() * window.innerHeight;
       
       el.style.left = x + 'px';
       el.style.top = y + 'px';
-      el.style.width = '100px';
-      el.style.height = '100px';
-      el.style.background = currentConfig.reactionColor; // 設定画面の色を反映
+      el.style.background = 'transparent'; 
+      el.style.width = '150px';
+      el.style.height = '150px';
       
-      // スタンプの種類によってテキストを変えるなど
-      const emojis = ['🔥', '❤️', '🙌', '🎉'];
-      el.innerText = emojis[data.id - 1] || '●';
-      el.style.fontSize = '50px';
-      el.style.display = 'flex';
-      el.style.justifyContent = 'center';
-      el.style.alignItems = 'center';
+      // 画像ファイル名の配列
+      const stampImages = ['1.png', '2.png', '3.png', '4.png'];
+      
+      const img = document.createElement('img');
+      img.src = 'img/stamps/' + (stampImages[data.id - 1] || '1.png');
+      
+      img.style.width = '100%';
+      img.style.height = '100%';
+      img.style.objectFit = 'contain';
+      
+      el.appendChild(img);
+      area.appendChild(el); // visualAreaに追加するので、overlayの下に表示される
 
-      area.appendChild(el);
-
-      // 時間経過で消す
       setTimeout(() => {
         el.remove();
       }, currentConfig.displayDuration || 1000);

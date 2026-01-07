@@ -82,3 +82,37 @@ body {
   /* 画像が明るすぎる場合は、このフィルターで少し暗くしてグリッドを見やすくする */
   /* background-blend-mode: overlay;  */
 }
+/* ベースの背景（一番奥） */
+body {
+  background-color: #000000; /* 真っ黒 */
+  /* もし以前のグリッド設定が残っていたら、ここで上書きされるのでOK */
+}
+
+/* スタンプが表示されるエリア（中間レイヤー） */
+#visualArea {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1; /* 手前の画像より奥にする */
+  overflow: hidden;
+}
+
+/* 手前に被せる画像レイヤー（一番手前） */
+.foreground-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  
+  /* 画像の設定 */
+  background-image: url('../img/bg1.png');
+  background-size: cover; /* 画面いっぱいに広げる */
+  background-position: center center;
+  background-repeat: no-repeat;
+  
+  z-index: 10; /* スタンプより手前に表示！ */
+  pointer-events: none; /* クリックやタッチを透過させる（裏の要素に干渉しないように） */
+}
