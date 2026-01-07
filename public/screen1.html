@@ -7,8 +7,7 @@
 </head>
 <body>
   
-  <div id="visualArea">
-    </div>
+  <div id="visualArea"></div>
 
   <div class="foreground-overlay"></div>
 
@@ -19,12 +18,97 @@
   <script src="/socket.io/socket.io.js"></script>
   <script>
     const socket = io();
-    const area = document.getElementById('visualArea'); // スタンプはこの中に追加される
+    const area = document.getElementById('visualArea');
     let currentConfig = {};
 
+    // ==========================================
+    // ⚙️ 連番スタンプの設定 (ここを画像に合わせて変更！)
+    // ==========================================
+    const stampConfig = {
+      // ID 1 (🔥) の設定
+      1: {
+        folder: 'img/stamps/1/',      // フォルダパス (最後は / で)
+        prefix: 'fire_',              // ファイル名の接頭辞
+        digits: 4,                    // 数字の桁数 (0001なら4)
+        ext: '.png',                  // 拡張子
+        start: 1, end: 30,            // 開始番号と終了番号
+        fps: 30,                      // 1秒間のコマ数 (速度)
+        width: 200                    // 表示サイズ (px)
+      },
+      // ID 2 (❤️) の設定：例の「heartpre010001.png」パターン
+      2: {
+        folder: 'img/stamps/2/',
+        prefix: 'heartpre01',         // "heartpre01" までを接頭辞とみなす
+        digits: 4,                    // その後ろの "0001" の部分の桁数
+        ext: '.png',
+        start: 1, end: 150,
+        fps: 30,
+        width: 250
+      },
+      // ID 3 (🙌)
+      3: {
+        folder: 'img/stamps/3/',
+        prefix: 'hand_',
+        digits: 4,
+        ext: '.png',
+        start: 1, end: 60,
+        fps: 24,
+        width: 200
+      },
+      // ID 4 (🎉)
+      4: {
+        folder: 'img/stamps/4/',
+        prefix: 'party_',
+        digits: 4,
+        ext: '.png',
+        start: 1, end: 60,
+        fps: 30,
+        width: 200
+      }
+    };
+
+    // ==========================================
+    // 🚀 プリロード処理 (読み込み高速化)
+    // ==========================================
+    const imageCache = {}; // 読み込んだ画像をメモリに保存しておく場所
+
+    function preloadImages() {
+      console.log('Start preloading images...');
+      
+      for (const [id, cfg] of Object.entries(stampConfig)) {
+        imageCache[id] = []; // 配列を初期化
+        
+        for (let i = cfg.start; i <= cfg.end; i++) {
+          // ゼロ埋め処理 (例: 1 -> "0001")
+          const numStr = String(i).padStart(cfg.digits, '0');
+          const src = `${cfg.folder}${cfg.prefix}${numStr}${cfg.ext}`;
+          
+          const img = new Image();
+          img.src = src;
+          imageCache[id].push(img); // メモリに保存
+        }
+      }
+      console.log('Preload complete!');
+    }
+
+    // ページ読み込み時に実行
+    window.onload = preloadImages;
+
+
+    // ==========================================
+    // 🎬 アニメーション再生処理
+    // ==========================================
     socket.on('configUpdate', (config) => currentConfig = config);
 
     socket.on('reactionTrigger', (data) => {
+      const id = data.id;
+      // 設定がないIDなら何もしない、またはデフォルト処理
+      if (!stampConfig[id] || !imageCache[id] || imageCache[id].length === 0) return;
+
+      const cfg = stampConfig[id];
+      const frames = imageCache[id]; // プリロード済み画像配列
+
+      // 表示要素を作成
       const el = document.createElement('div');
       el.className = 'visual-object';
       
@@ -33,26 +117,51 @@
       
       el.style.left = x + 'px';
       el.style.top = y + 'px';
-      el.style.background = 'transparent'; 
-      el.style.width = '150px';
-      el.style.height = '150px';
+      el.style.width = cfg.width + 'px';
+      el.style.height = cfg.width + 'px'; // 正方形とする
+      el.style.background = 'transparent';
       
-      // 画像ファイル名の配列
-      const stampImages = ['1.png', '2.png', '3.png', '4.png'];
+      // 画像表示用のimgタグ
+      const imgTag = document.createElement('img');
+      imgTag.style.width = '100%';
+      imgTag.style.height = '100%';
+      imgTag.style.objectFit = 'contain';
       
-      const img = document.createElement('img');
-      img.src = 'img/stamps/' + (stampImages[data.id - 1] || '1.png');
+      // 最初のフレームを表示
+      imgTag.src = frames[0].src;
       
-      img.style.width = '100%';
-      img.style.height = '100%';
-      img.style.objectFit = 'contain';
-      
-      el.appendChild(img);
-      area.appendChild(el); // visualAreaに追加するので、overlayの下に表示される
+      el.appendChild(imgTag);
+      area.appendChild(el);
 
-      setTimeout(() => {
-        el.remove();
-      }, currentConfig.displayDuration || 1000);
+      // --- アニメーションループ ---
+      let frameIndex = 0;
+      let lastTime = performance.now();
+      const interval = 1000 / cfg.fps; // 1フレームあたりの時間(ms)
+
+      function loop(currentTime) {
+        if (!el.parentNode) return; // 要素が消えてたら終了
+
+        const deltaTime = currentTime - lastTime;
+
+        if (deltaTime > interval) {
+          lastTime = currentTime - (deltaTime % interval);
+          
+          frameIndex++; // 次のフレームへ
+
+          if (frameIndex < frames.length) {
+            // 画像を差し替え
+            imgTag.src = frames[frameIndex].src;
+            requestAnimationFrame(loop);
+          } else {
+            // 最後のフレームまで再生したら削除
+            el.remove();
+          }
+        } else {
+          requestAnimationFrame(loop);
+        }
+      }
+
+      requestAnimationFrame(loop);
     });
   </script>
 </body>
