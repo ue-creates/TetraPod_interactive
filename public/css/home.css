@@ -1,0 +1,344 @@
+/* =========================================
+   共通設定
+   ========================================= */
+html {
+  /* 001ページ同様、ヌルっとスクロールさせる */
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #000;
+  font-family: 'Noto Sans JP', sans-serif;
+  overflow-x: hidden;
+  color: white;
+}
+
+/* リンク(aタグ)の基本設定 */
+a {
+  color: white;
+  text-decoration: none;
+}
+
+/* PC向けの改行はデフォルトで有効 */
+.pc-br { display: inline; }
+
+/* 画像設定 */
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* =========================================
+   💻 PC版レイアウト (1001px以上)
+   比率維持のFluidデザイン（ポスターのように縮小）
+   ========================================= */
+@media screen and (min-width: 1001px) {
+  .home-container {
+    position: relative;
+    width: 100%;
+    max-width: 1920px;
+    /* 👇 魔法の記述: 幅と高さの比率を固定する */
+    aspect-ratio: 1920 / 2798;
+    margin: 0 auto;
+    background-color: #000;
+    overflow: hidden;
+  }
+
+  /* --- Header --- */
+  .header-text {
+    position: absolute;
+    /* 元の座標(120px) / 高さ(2798px) * 100 ≒ 4.3% */
+    top: 4.3%; 
+    left: 7.3%; /* 140px / 1920px ≒ 7.3% */
+    font-family: 'Lexend Mega', sans-serif;
+    font-weight: 300;
+    /* 文字サイズを画面幅連動(vw)にする */
+    font-size: clamp(16px, 1.6vw, 32px);
+    letter-spacing: -0.1em;
+  }
+
+  .hero-image-sub {
+    position: absolute;
+    top: 6.2%; left: 7.3%;
+    width: 52%; /* 1000px / 1920px */
+    z-index: 2;
+  }
+
+  /* --- Hero --- */
+  .hero-image-main {
+    position: absolute;
+    top: 6.2%; left: 39.5%; /* 759px / 1920px */
+    width: 53.1%; /* 1020px / 1920px */
+    object-fit: cover;
+    z-index: 1;
+  }
+
+  /* --- Intro --- */
+  .intro-text {
+    position: absolute;
+    top: 27.7%; left: 7.3%;
+    width: 30.3%;
+    font-size: clamp(12px, 0.9vw, 18px);
+    line-height: 1.7;
+  }
+
+  /* --- Banner & Title --- */
+  .title-logo {
+    position: absolute;
+    top: 35.3%; left: 50%;
+    transform: translateX(-50%); /* 中央配置 */
+    width: 23.7%; /* 456px */
+    height: auto;
+  }
+
+  .event-banner {
+    position: absolute;
+    top: 39.2%; left: 50%;
+    transform: translateX(-50%);
+    width: 31.1%; /* 598px */
+    height: auto;
+    object-fit: cover;
+  }
+
+  /* --- Organizer --- */
+  .organizer-title {
+    position: absolute;
+    top: 73.7%; left: 50%;
+    transform: translateX(-50%);
+    font-weight: 900;
+    font-size: clamp(32px, 3.3vw, 64px);
+    white-space: nowrap;
+  }
+
+  .organizer-name {
+    position: absolute;
+    top: 77.8%; left: 50%;
+    transform: translateX(-50%);
+    font-weight: 900;
+    font-size: clamp(16px, 1.6vw, 32px);
+    white-space: nowrap;
+  }
+
+  .organizer-box {
+    position: absolute;
+    top: 81%; left: 50%;
+    transform: translateX(-50%);
+    width: 85.4%; /* 1640px */
+    height: 9.6%; /* 269px */
+    background-color: white;
+  }
+
+  .organizer-box-logo {
+    position: absolute;
+    top: 82.3%; left: 34.6%; /* 665px */
+    width: 28.1%; /* 541px */
+    height: auto;
+    z-index: 2;
+  }
+
+  .organizer-desc {
+    position: absolute;
+    top: 86.1%; left: 50%;
+    transform: translateX(-50%);
+    width: 47.2%; /* 907px */
+    color: black;
+    font-size: clamp(10px, 0.9vw, 18px);
+    line-height: 1.7;
+    text-align: center;
+    z-index: 3;
+  }
+
+  /* --- Footer --- */
+  .footer-bg {
+    position: absolute;
+    left: 0; bottom: 0;
+    width: 100%; 
+    height: 5%; /* 141px */
+    background-color: #002040;
+  }
+
+  .footer-links {
+    position: absolute;
+    bottom: 1.7%; /* 48px */
+    left: 28.2%; /* 542px */
+    display: flex;
+    gap: clamp(20px, 12.5vw, 80px);
+    z-index: 10;
+  }
+  .footer-links a {
+    font-size: clamp(12px, 1.25vw, 20px);
+  }
+
+  .footer-logo {
+    position: absolute;
+    bottom: 1.7%; left: 7.3%;
+    width: 15.8%; /* 304px */
+    height: auto;
+    z-index: 10;
+  }
+
+  .copyright {
+    position: absolute;
+    bottom: 1.8%; 
+    right: 7.3%; /* 右寄せに変更して安定させる */
+    font-size: clamp(12px, 1.25vw, 16px);
+    margin: 0;
+    z-index: 10;
+    color: rgba(255, 255, 255, 0.7);
+  }
+}
+
+/* =========================================
+   📱 スマホ・タブレット版 (1000px以下)
+   ※以前のまま（縦並びレスポンシブ）
+   ========================================= */
+@media screen and (max-width: 1000px) {
+  .home-container {
+    width: 100%;
+    height: auto;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 50px;
+  }
+
+  .pc-br { display: none; }
+
+  /* Header */
+  .header-section {
+    padding: 40px 20px 20px;
+    text-align: center;
+  }
+  .header-text {
+    font-family: 'Lexend Mega', sans-serif;
+    font-weight: 300;
+    font-size: 24px;
+    letter-spacing: -2px;
+    margin-bottom: 20px;
+  }
+  .hero-image-sub {
+    display: block;
+    width: 100%;
+    margin-bottom: 20px;
+  }
+
+  /* Hero */
+  .hero-section {
+    width: 100%;
+    margin-bottom: 40px;
+  }
+  .hero-image-main {
+    width: 100%;
+    display: block;
+  }
+
+  /* Intro */
+  .intro-section {
+    padding: 0 20px;
+    margin-bottom: 60px;
+  }
+  .intro-text {
+    font-size: 16px;
+    line-height: 1.8;
+    text-align: left;
+  }
+
+  /* Banner Section */
+  .event-banner-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 30px;
+    margin-bottom: 80px;
+  }
+  .title-logo {
+    width: 80%;
+    max-width: 300px;
+    height: auto;
+  }
+  .event-banner {
+    width: 90%;
+    max-width: 500px;
+    height: auto;
+    border-radius: 4px;
+  }
+
+  /* Organizer Section */
+  .organizer-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 20px;
+    margin-bottom: 60px;
+  }
+  .organizer-title {
+    font-size: 40px;
+    font-weight: 900;
+    margin-bottom: 10px;
+  }
+  .organizer-name {
+    font-size: 18px;
+    font-weight: 900;
+    margin-bottom: 30px;
+    text-align: center;
+  }
+
+  .organizer-content-wrapper {
+    background-color: white;
+    padding: 30px 20px;
+    width: 90%;
+    max-width: 600px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: black;
+  }
+  .organizer-box { display: none; }
+  
+  .organizer-box-logo {
+    width: 80%;
+    max-width: 300px;
+    height: auto;
+    margin-bottom: 20px;
+  }
+  .organizer-desc {
+    font-size: 14px;
+    line-height: 1.8;
+    text-align: left;
+  }
+
+  /* Footer */
+  .footer-section {
+    background-color: #002040;
+    padding: 40px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+  }
+  .footer-bg { display: none; }
+
+  .footer-links {
+    display: flex;
+    flex-direction: column;
+    /* gap: 15px; */
+    text-align: center;
+  }
+  .footer-link {
+    font-size: 16px;
+  }
+
+  .footer-logo {
+    width: 200px;
+    height: auto;
+  }
+  
+  .copyright {
+    color: rgba(255,255,255,0.6);
+    font-size: 12px;
+    margin-top: 20px;
+  }
+}

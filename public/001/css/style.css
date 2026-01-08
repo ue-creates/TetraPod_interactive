@@ -1,0 +1,455 @@
+/* =========================================
+   共通・基本設定
+   ========================================= */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #000;
+  font-family: 'Noto Sans JP', sans-serif;
+  color: white;
+  overflow-x: hidden;
+  font-size: 16px;
+}
+
+/* リンク設定 */
+a {
+  color: white;
+  text-decoration: none;
+  transition: opacity 0.3s;
+}
+a:hover {
+  opacity: 0.7;
+  text-decoration: underline;
+}
+
+/* 画像設定 */
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* 自動リンク無効化 */
+address, a[href^="tel"], a[href^="maps"] {
+  color: white;
+  font-style: normal;
+  text-decoration: none;
+}
+
+/* PC用の改行制御 */
+.pc-br {
+  display: none;
+}
+@media screen and (min-width: 800px) {
+  .pc-br { display: inline; }
+}
+
+/* =========================================
+   レイアウトコンテナ (Fluid Layout)
+   ========================================= */
+.page001-container {
+  width: 100%;
+  max-width: 1920px;
+  margin: 0 auto;
+  background-color: #000;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-bottom: 50px;
+  min-height: 100vh;
+}
+
+/* =========================================
+   ヘッダー (左揃え・可変)
+   ========================================= */
+.fixed-header {
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100px;
+  background-color: #002040;
+  z-index: 100;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: clamp(20px, 5vw, 80px);
+  padding: 0 clamp(20px, 7vw, 140px);
+  box-sizing: border-box;
+}
+
+.header-logo {
+  width: clamp(150px, 15vw, 238px);
+  height: auto;
+}
+
+.header-nav {
+  display: flex;
+  gap: clamp(15px, 8vw, 143px);
+}
+
+.header-nav a {
+  font-family: 'Noto Sans JP', sans-serif;
+  font-weight: 700;
+  font-size: clamp(18px, 1.5vw, 24px);
+  white-space: nowrap;
+}
+
+/* =========================================
+   メインビジュアル (シンプル配置に戻しました)
+   ========================================= */
+.bg-image-main {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%); /* 左右中央揃え */
+  
+  width: 100%;
+  max-width: 1920px; /* 原寸以上にはしない */
+  
+  z-index: 0; /* コンテンツより奥 */
+  pointer-events: none;
+  /* opacity: 0.8; 文字が見にくい場合はコメントアウトを外して調整してください */
+}
+
+/* =========================================
+   セクション共通
+   ========================================= */
+section {
+  width: 100%;
+  padding: 0 20px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  z-index: 10;
+  scroll-margin-top: 110px;
+}
+
+.lexend-light { font-family: 'Lexend Mega', sans-serif; font-weight: 300; }
+.lexend-bold { font-family: 'Lexend Mega', sans-serif; font-weight: 700; }
+
+/* =========================================
+   About Section
+   ========================================= */
+.section-about {
+  /* 固定ヘッダーの分 + 余白 を確保 */
+  margin-top: clamp(120px, 15vw, 184px);
+  margin-bottom: clamp(60px, 10vw, 120px);
+}
+
+.about-title {
+  font-family: 'Lexend Mega', sans-serif;
+  font-weight: 300;
+  font-size: clamp(20px, 3vw, 32px);
+  letter-spacing: -0.05em;
+  margin: 0 0 10px 0;
+  text-align: center;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+
+.about-date {
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: clamp(18px, 2.5vw, 32px);
+  margin-bottom: 40px;
+  text-align: center;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+
+.about-logo {
+  width: clamp(250px, 40vw, 458px);
+  height: auto;
+  margin-bottom: 40px;
+  filter: drop-shadow(0 4px 10px rgba(0,0,0,0.5));
+}
+
+.about-desc {
+  font-size: clamp(14px, 1.5vw, 18px);
+  line-height: 1.8;
+  text-align: center;
+  max-width: 600px;
+  width: 100%;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+}
+
+/* =========================================
+   Banners Section
+   ========================================= */
+.section-banners {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  gap: clamp(20px, 3vw, 50px);
+  flex-wrap: wrap;
+  margin-bottom: 100px;
+}
+
+.banner-img {
+  width: 100%;
+  max-width: 598px;
+  min-width: 280px;
+  flex: 1 1 400px;
+  border-radius: 4px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+}
+
+/* =========================================
+   Timetable Section
+   ========================================= */
+.section-timetable {
+  margin-bottom: 100px;
+  width: 100%;
+  max-width: 1000px;
+  margin-left: auto; margin-right: auto;
+}
+
+.section-heading {
+  font-family: 'Lexend Mega', sans-serif;
+  font-weight: 700;
+  font-size: clamp(32px, 5vw, 64px);
+  letter-spacing: -0.05em;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.tt-date, .tt-time {
+  font-family: 'Lexend Mega', sans-serif;
+  font-size: clamp(18px, 2.5vw, 32px);
+  margin-bottom: 10px;
+  text-align: center;
+}
+.tt-time { margin-bottom: 40px; }
+
+.tt-performers-title {
+  font-family: 'Lexend Mega', sans-serif;
+  font-weight: 700;
+  font-size: clamp(20px, 2.5vw, 32px);
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+/* グリッドレイアウト */
+.tt-cols-header, .tt-body-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr 1.2fr;
+  width: 100%;
+  max-width: 800px;
+  padding: 0 10px;
+  box-sizing: border-box;
+}
+
+/* ヘッダー行 */
+.tt-cols-header {
+  margin-bottom: 10px;
+  text-align: center;
+  align-items: end;
+}
+.tt-col-dummy { grid-column: 1; }
+.tt-col-dj { grid-column: 2; font-family: 'Lexend Mega', sans-serif; font-weight: 700; font-size: clamp(16px, 2vw, 24px); }
+.tt-col-vj { grid-column: 3; font-family: 'Lexend Mega', sans-serif; font-weight: 700; font-size: clamp(16px, 2vw, 24px); }
+
+/* ボディ行 */
+.tt-body-grid {
+  align-items: stretch; 
+}
+
+/* 左列: 時間リスト */
+.tt-slots {
+  grid-column: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  
+  font-family: 'Lexend Mega', sans-serif;
+  font-size: clamp(16px, 2.5vw, 32px);
+  line-height: 2.0;
+  text-align: center;
+  
+  border-right: 1px solid rgba(255,255,255,0.3);
+  padding-right: 20px;
+}
+
+/* 右列: Coming Soon */
+.tt-comingsoon {
+  grid-column: 2 / 4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  font-family: 'Lexend Mega', sans-serif;
+  font-weight: 300;
+  font-size: clamp(32px, 5vw, 64px);
+  opacity: 0.8;
+  letter-spacing: -0.05em;
+  padding-left: 20px;
+}
+
+/* =========================================
+   Location Section
+   ========================================= */
+.loc-address {
+  font-size: clamp(16px, 2.5vw, 32px);
+  margin-bottom: 20px;
+  text-align: center;
+  word-break: keep-all;
+}
+
+.loc-address a {
+  text-decoration: underline; /* 常に下線を引く */
+  text-underline-offset: 4px; /* 線を文字から少し離すと見やすいです */
+  color: white; /* 色は白のまま */
+}
+
+/* ホバーした時に少し薄くする（共通設定があれば不要ですが念のため） */
+.loc-address a:hover {
+  opacity: 0.7;
+}
+
+.loc-fee {
+  font-size: clamp(20px, 2.5vw, 32px);
+  font-weight: 700;
+  text-align: center;
+}
+
+/* =========================================
+   Organizer Section
+   ========================================= */
+.section-organizer {
+  margin-top: 100px;
+}
+.org-title {
+  font-size: clamp(32px, 5vw, 64px);
+  font-weight: 900;
+  margin-bottom: 10px;
+  text-align: center;
+}
+.org-name {
+  font-size: clamp(18px, 2.5vw, 32px);
+  font-weight: 900;
+  margin-bottom: 30px;
+  text-align: center;
+}
+.org-content-box {
+  background-color: white;
+  color: black;
+  width: 90%;
+  max-width: 1640px;
+  padding: clamp(20px, 4vw, 50px);
+  /* border-radius: 8px; */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.org-logo {
+  width: clamp(200px, 40vw, 541px);
+  height: auto;
+  margin-bottom: 30px;
+}
+.org-desc {
+  font-size: clamp(14px, 1.5vw, 18px);
+  line-height: 1.8;
+  max-width: 900px;
+  text-align: left;
+}
+@media screen and (min-width: 800px) {
+  .org-desc { text-align: center; }
+}
+
+/* =========================================
+   Footer Section (親ページのデザイン再現 & レスポンシブ)
+   ========================================= */
+.footer-section {
+  width: 100%;
+  background-color: #002040;
+  margin-top: 50px;
+  
+  /* 中身の配置設定 */
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  
+  /* PC表示時のレイアウト（親ページのデザインをFlexboxで再現）
+     1200px以上なら横一列、それ以下なら縦並びに切り替える
+  */
+  flex-wrap: wrap; /* 折り返しを許可 */
+  justify-content: flex-start; /* 左詰め */
+  
+  /* 高さ: PCのときは141px確保、スマホで折り返したら自動で伸びる */
+  min-height: 141px; 
+  padding: 20px 0; /* 上下の最低余白 */
+}
+
+/* --- 各要素のスタイル --- */
+
+/* ロゴ (左側) */
+.footer-logo {
+  width: 304px;
+  height: auto;
+  /* 親ページの left: 140px を再現 (画面幅に応じて縮む) */
+  margin-left: clamp(20px, 7vw, 140px);
+  margin-right: 50px; /* リンクとの最低間隔 */
+}
+
+/* リンク (中央左寄り) */
+.footer-links {
+  display: flex;
+  gap: clamp(20px, 3vw, 241px); /* リンク間の距離 (親ページは241px) */
+  margin-right: auto; /* 右側の余白を自動で埋めて、Copyrightを右端に押す */
+}
+.footer-links a {
+  font-size: 16px;
+  color: white;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+/* コピーライト (右側) */
+.copyright {
+  font-size: 12px;
+  color: white;
+  white-space: nowrap;
+  /* 親ページの left: 1416px 付近を再現 (右端からの余白) */
+  margin-right: clamp(20px, 7vw, 140px);
+  margin-left: 50px; /* リンクとの最低間隔 */
+}
+
+/* =========================================
+   📱 画面幅が狭いときのブレークポイント (1200px以下)
+   「見やすいタイミングで改行」を実現
+   ========================================= */
+@media screen and (max-width: 1200px) {
+  .footer-section {
+    flex-direction: column; /* 縦並びにする */
+    justify-content: center;
+    gap: 30px; /* 要素間の余白 */
+    padding: 40px 20px;
+    height: auto;
+  }
+
+  /* マージンをリセットして中央揃えに */
+  .footer-logo {
+    margin: 0;
+    width: clamp(200px, 50vw, 304px); /* スマホでは少し小さくてもOK */
+  }
+
+  .footer-links {
+    margin: 0;
+    flex-direction: column; /* リンク同士も縦に並べる（お好みでrowでも可） */
+    align-items: center;
+    gap: 20px;
+  }
+  
+  /* スマホでのリンク順序制御（以前の要望: リンク→ロゴ→コピーライト） */
+  /* .footer-links { order: 1; }
+  .footer-logo  { order: 2; }
+  .copyright    { order: 3; } */
+
+  .copyright {
+    margin: 0;
+    font-size: clamp(12px, 3vw, 12px); /* スマホでは少し文字を小さく */
+    color: rgba(255, 255, 255, 0.7);
+  }
+}
