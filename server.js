@@ -29,8 +29,9 @@ io.on('connection', (socket) => {
 
   // シェイクを受信 -> 画面3へ転送
   socket.on('shake', (data) => {
-    // data = { intensity: number }
-    io.emit('shakeTrigger', data);
+    // 受け取ったシェイク信号を、他の全員(スクリーン含む)に転送する
+    io.emit('shake', data); 
+    // または socket.broadcast.emit('shake', data);
   });
 
   // 設定変更を受信 -> 全員へ共有
