@@ -2,57 +2,191 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>TetraPod Screen 1</title>
+  <title>TetraPod Screen 2</title>
   <link rel="stylesheet" href="css/style.css">
+  <style>
+    #visualArea {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      z-index: 1; pointer-events: none; overflow: hidden;
+    }
+    .circle-glow-layer { z-index: 5; }
+    .center-circle { z-index: 10; }
+    .dj-text-display { z-index: 11; }
+    .visual-object { position: absolute; top: 0; left: 0; will-change: transform; }
+  </style>
 </head>
 <body>
   
-  <div id="visualArea">
-    </div>
-
-  <div class="foreground-overlay"></div>
-
-  <h1 style="position:absolute; top:10px; left:20px; z-index:20; color:white; opacity:0.5;">
-    Screen 2
-  </h1>
+  <div id="visualArea"></div>
+  <div id="circleGlow" class="circle-glow-layer"></div>
+  <div id="centerCircle" class="center-circle"></div>
+  <div id="djNameDisplay" class="dj-text-display">WAITING...</div>
 
   <script src="/socket.io/socket.io.js"></script>
   <script>
     const socket = io();
-    const area = document.getElementById('visualArea'); // スタンプはこの中に追加される
-    let currentConfig = {};
+    const area = document.getElementById('visualArea');
+    const glowLayer = document.getElementById('circleGlow');
+    const djNameDisplay = document.getElementById('djNameDisplay');
+    
+    let currentConfig = { 
+      displayRatio: 1.0, 
+      displayDuration: 2000 
+    };
 
-    socket.on('configUpdate', (config) => currentConfig = config);
+    // ==========================================
+    // ⚙️ 連番スタンプの設定
+    // ==========================================
+    const stampConfig = {
+      1: { folder: 'img/stamps/1/', prefix: 'fire_', digits: 4, ext: '.png', start: 1, end: 30, fps: 30, width: 200 },
+      2: { folder: 'img/stamps/2/', prefix: 'heartpre01', digits: 4, ext: '.png', start: 1, end: 150, fps: 30, width: 100 },
+      3: { folder: 'img/stamps/3/', prefix: 'hand_', digits: 4, ext: '.png', start: 1, end: 60, fps: 24, width: 200 },
+      4: { folder: 'img/stamps/4/', prefix: 'party_', digits: 4, ext: '.png', start: 1, end: 60, fps: 30, width: 200 }
+    };
 
+    // 🚀 プリロード処理
+    const imageCache = {};
+    function preloadImages() {
+      console.log('Start preloading images...');
+      for (const [id, cfg] of Object.entries(stampConfig)) {
+        imageCache[id] = [];
+        for (let i = cfg.start; i <= cfg.end; i++) {
+          const numStr = String(i).padStart(cfg.digits, '0');
+          const src = `${cfg.folder}${cfg.prefix}${numStr}${cfg.ext}`;
+          const img = new Image();
+          img.src = src;
+          imageCache[id].push(img);
+        }
+      }
+      console.log('Preload complete!');
+    }
+    window.onload = preloadImages;
+
+    // ==========================================
+    // 🚦 負荷対策設定
+    // ==========================================
+    const MAX_ACTIVE_STAMPS = 10; 
+    let activeStampCount = 0;
+    const GLOBAL_THROTTLE_MS = 100; // 少し短くしました（Ratioで制御できるため）
+    let lastGlobalTriggerTime = 0;
+
+    // --- 設定反映 ---
+    socket.on('configUpdate', (config) => {
+      currentConfig = config;
+      if (config.reactionColor && glowLayer) glowLayer.style.backgroundColor = config.reactionColor;
+      if (config.djNameText && djNameDisplay) djNameDisplay.innerText = config.djNameText;
+    });
+
+    // --- スタンプ生成処理 ---
     socket.on('reactionTrigger', (data) => {
+      const id = data.id;
+      if (!stampConfig[id] || !imageCache[id] || imageCache[id].length === 0) return;
+
+      // 🎲 1. 確率による間引き (Ratio Check)
+      // displayRatioが 0.5 なら 50% の確率で弾く
+      // 設定値がない場合は 1.0 (全通し) とする
+      const ratio = currentConfig.displayRatio !== undefined ? currentConfig.displayRatio : 1.0;
+      if (Math.random() > ratio) {
+        return; 
+      }
+
+      // 🚫 2. スロットリング & 個数制限
+      const now = Date.now();
+      if (now - lastGlobalTriggerTime < GLOBAL_THROTTLE_MS) return;
+      if (activeStampCount >= MAX_ACTIVE_STAMPS) return;
+
+      activeStampCount++;
+      lastGlobalTriggerTime = now;
+
+      const cfg = stampConfig[id];
+      const frames = imageCache[id];
+
+      // --- 位置計算 ---
+      const CX = window.innerWidth * 0.5;
+      const CY = window.innerHeight * (500 / 1080);
+      const RADIUS = window.innerHeight * (500 / 1080);
+      const angle = Math.random() * 2 * Math.PI;
+
+      let currentX = CX + Math.cos(angle) * RADIUS;
+      let currentY = CY + Math.sin(angle) * RADIUS;
+
+      // 要素生成
       const el = document.createElement('div');
       el.className = 'visual-object';
+      el.style.width = cfg.width + 'px';
+      el.style.height = cfg.width + 'px';
+      el.style.background = 'transparent';
       
-      const x = Math.random() * window.innerWidth;
-      const y = Math.random() * window.innerHeight;
+      const imgTag = document.createElement('img');
+      imgTag.style.width = '100%';
+      imgTag.style.height = '100%';
+      imgTag.style.objectFit = 'contain';
+      imgTag.src = frames[0].src;
       
-      el.style.left = x + 'px';
-      el.style.top = y + 'px';
-      el.style.background = 'transparent'; 
-      el.style.width = '150px';
-      el.style.height = '150px';
-      
-      // 画像ファイル名の配列
-      const stampImages = ['1.png', '2.png', '3.png', '4.png'];
-      
-      const img = document.createElement('img');
-      img.src = 'img/stamps/' + (stampImages[data.id - 1] || '1.png');
-      
-      img.style.width = '100%';
-      img.style.height = '100%';
-      img.style.objectFit = 'contain';
-      
-      el.appendChild(img);
-      area.appendChild(el); // visualAreaに追加するので、overlayの下に表示される
+      el.appendChild(imgTag);
+      area.appendChild(el);
 
-      setTimeout(() => {
-        el.remove();
-      }, currentConfig.displayDuration || 1000);
+      // --- アニメーションループ ---
+      let frameIndex = 0;
+      let lastTime = performance.now();
+      const startTime = lastTime; // 生成時刻を記録
+      const interval = 1000 / cfg.fps;
+      
+      const baseSpeed = window.innerHeight * 0.002;
+      const speed = baseSpeed * (1.5 + Math.random() * 2); 
+      const vx = Math.cos(angle) * speed;
+      const vy = Math.sin(angle) * speed;
+
+      function loop(currentTime) {
+        if (!el.parentNode) return;
+
+        // 1. ⏱️ 寿命判定 (Duration Check)
+        const duration = currentConfig.displayDuration || 2000;
+        if (currentTime - startTime > duration) {
+          el.remove();
+          activeStampCount--;
+          return;
+        }
+
+        // 移動更新
+        currentX += vx;
+        currentY += vy;
+        
+        // 描画座標（左上）
+        const drawX = currentX - (cfg.width / 2);
+        const drawY = currentY - (cfg.width / 2);
+        
+        el.style.transform = `translate3d(${drawX}px, ${drawY}px, 0)`;
+
+        // 2. 🚫 画面外判定 (Off-screen Check) [NEW!]
+        // 画面の上下左右どっちかにはみ出して見えなくなったら消す
+        if (
+          drawX > window.innerWidth ||  // 右に消えた
+          drawX + cfg.width < 0 ||      // 左に消えた
+          drawY > window.innerHeight || // 下に消えた
+          drawY + cfg.width < 0         // 上に消えた
+        ) {
+          el.remove();
+          activeStampCount--;
+          return; // ここで終了
+        }
+
+        // 3. 🎞️ 画像切り替え (ループ再生)
+        const deltaTime = currentTime - lastTime;
+        if (deltaTime > interval) {
+          lastTime = currentTime - (deltaTime % interval);
+          
+          frameIndex++;
+          if (frameIndex >= frames.length) {
+            frameIndex = 0; // ループ
+          }
+          imgTag.src = frames[frameIndex].src;
+        }
+        
+        requestAnimationFrame(loop);
+      }
+
+      requestAnimationFrame(loop);
     });
   </script>
 </body>

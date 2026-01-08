@@ -99,20 +99,88 @@ body {
   overflow: hidden;
 }
 
-/* 手前に被せる画像レイヤー（一番手前） */
-.foreground-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+/* ⚪️ 中央の白い円 */
+.center-circle {
+  position: absolute;
   
-  /* 画像の設定 */
-  background-image: url('../img/bg1.png');
-  background-size: cover; /* 画面いっぱいに広げる */
-  background-position: center center;
-  background-repeat: no-repeat;
+  /* 基準解像度 1920x1080 */
+  /* 中心(960, 500) -> left: 50%, top: 46.3% (500/1080) */
+  left: 50%;
+  top: calc(100vh * (500 / 1080));
   
-  z-index: 10; /* スタンプより手前に表示！ */
-  pointer-events: none; /* クリックやタッチを透過させる（裏の要素に干渉しないように） */
+  /* 半径420 -> 直径840 -> 高さの 77.8% (840/1080) */
+  width: calc(100vh * (840 / 1080));
+  height: calc(100vh * (840 / 1080));
+  
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  
+  /* デザイン: 白い線 (太さは画面サイズに合わせて調整可) */
+  border: 5px solid white;
+  background-color: white; /* 中身は透けさせる */
+  
+  /* スタンプ(z-index:1)より手前 */
+  z-index: 10;
+  pointer-events: none; /* クリックを透過 */
+  
+}
+
+/* ✨🆕 光るエフェクト用の奥のレイヤー */
+.circle-glow-layer {
+  position: absolute;
+  /* 位置とサイズは白い円と全く同じにする */
+  left: 50%;
+  top: calc(100vh * (500 / 1080));
+  width: calc(100vh * (840 / 1080));
+  height: calc(100vh * (840 / 1080));
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  
+  /* z-indexを白い円(10)より小さくして奥に配置 */
+  z-index: 5; 
+  pointer-events: none;
+  
+  /* 光を拡散させるための強力なぼかしフィルター */
+  /* 値を大きくすると、より広範囲にぼんやり光ります */
+  filter: blur(60px);
+  
+  /* 色はJSで管理画面から設定されるので、初期値は透明でOK */
+  background-color: transparent;
+  /* さらに強く光らせたい場合は box-shadow も併用可能 */
+  /* box-shadow: 0 0 100px rgba(255,255,255,0.5); */
+}
+
+/* 📝 テキスト表示ボックス */
+.dj-text-display {
+  position: absolute;
+  top: calc(100vh * (700 / 1080));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 11;
+  
+  width: auto;         /* 文字数に合わせて自動調整 */
+  min-width: 600px;
+  max-width: 90%;
+  padding: 60px 30px;
+
+  /* 文字が折り返されないようにする（横に伸ばすため） */
+  white-space: nowrap;
+  /* もし画面幅いっぱいになったら、はみ出した分を「...」にするなら以下を追加 */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  
+  /* 文字のデザイン */
+  font-size: 80px;
+  text-align: center;
+  font-family: "Arial Black", sans-serif;
+  font-weight: 900;
+  letter-spacing: 2px;
+  text-transform: uppercase; /* 強制的に大文字にする */
+  
+  /* 白い長方形 */
+  background-color: white;
+  color: black;
+  
+  /* 少し影をつけて浮かせる */
+  /* box-shadow: 0 10px 30px rgba(0,0,0,0.5); */
 }

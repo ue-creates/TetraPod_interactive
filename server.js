@@ -12,7 +12,9 @@ app.use(express.static('public'));
 let config = {
   reactionColor: '#00ff00',
   shakeSensitivity: 80,
-  displayDuration: 1000
+  displayDuration: 2000, // デフォルトを少し長めに(2秒)
+  djNameText: 'DJ TETRAPOD',
+  displayRatio: 1.0 // 👈 追加: 表示割合 (0.0 〜 1.0)
 };
 
 io.on('connection', (socket) => {

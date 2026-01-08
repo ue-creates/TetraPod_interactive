@@ -4,130 +4,123 @@
   <meta charset="UTF-8">
   <title>TetraPod Screen 1</title>
   <link rel="stylesheet" href="css/style.css">
+  <style>
+    #visualArea {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      z-index: 1; pointer-events: none; overflow: hidden;
+    }
+    .circle-glow-layer { z-index: 5; }
+    .center-circle { z-index: 10; }
+    .dj-text-display { z-index: 11; }
+    .visual-object { position: absolute; top: 0; left: 0; will-change: transform; }
+  </style>
 </head>
 <body>
   
   <div id="visualArea"></div>
-
-  <div class="foreground-overlay"></div>
-
-  <h1 style="position:absolute; top:10px; left:20px; z-index:20; color:white; opacity:0.5;">
-    Screen 1
-  </h1>
+  <div id="circleGlow" class="circle-glow-layer"></div>
+  <div id="centerCircle" class="center-circle"></div>
+  <div id="djNameDisplay" class="dj-text-display">WAITING...</div>
 
   <script src="/socket.io/socket.io.js"></script>
   <script>
     const socket = io();
     const area = document.getElementById('visualArea');
-    let currentConfig = {};
-
-    // ==========================================
-    // ⚙️ 連番スタンプの設定 (ここを画像に合わせて変更！)
-    // ==========================================
-    const stampConfig = {
-      // ID 1 (🔥) の設定
-      1: {
-        folder: 'img/stamps/1/',      // フォルダパス (最後は / で)
-        prefix: 'fire_',              // ファイル名の接頭辞
-        digits: 4,                    // 数字の桁数 (0001なら4)
-        ext: '.png',                  // 拡張子
-        start: 1, end: 30,            // 開始番号と終了番号
-        fps: 30,                      // 1秒間のコマ数 (速度)
-        width: 200                    // 表示サイズ (px)
-      },
-      // ID 2 (❤️) の設定：例の「heartpre010001.png」パターン
-      2: {
-        folder: 'img/stamps/2/',
-        prefix: 'heartpre01',         // "heartpre01" までを接頭辞とみなす
-        digits: 4,                    // その後ろの "0001" の部分の桁数
-        ext: '.png',
-        start: 1, end: 150,
-        fps: 30,
-        width: 250
-      },
-      // ID 3 (🙌)
-      3: {
-        folder: 'img/stamps/3/',
-        prefix: 'hand_',
-        digits: 4,
-        ext: '.png',
-        start: 1, end: 60,
-        fps: 24,
-        width: 200
-      },
-      // ID 4 (🎉)
-      4: {
-        folder: 'img/stamps/4/',
-        prefix: 'party_',
-        digits: 4,
-        ext: '.png',
-        start: 1, end: 60,
-        fps: 30,
-        width: 200
-      }
+    const glowLayer = document.getElementById('circleGlow');
+    const djNameDisplay = document.getElementById('djNameDisplay');
+    
+    let currentConfig = { 
+      displayRatio: 1.0, 
+      displayDuration: 2000 
     };
 
     // ==========================================
-    // 🚀 プリロード処理 (読み込み高速化)
+    // ⚙️ 連番スタンプの設定
     // ==========================================
-    const imageCache = {}; // 読み込んだ画像をメモリに保存しておく場所
+    const stampConfig = {
+      1: { folder: 'img/stamps/1/', prefix: 'fire_', digits: 4, ext: '.png', start: 1, end: 30, fps: 30, width: 200 },
+      2: { folder: 'img/stamps/2/', prefix: 'heartpre01', digits: 4, ext: '.png', start: 1, end: 150, fps: 30, width: 100 },
+      3: { folder: 'img/stamps/3/', prefix: 'hand_', digits: 4, ext: '.png', start: 1, end: 60, fps: 24, width: 200 },
+      4: { folder: 'img/stamps/4/', prefix: 'party_', digits: 4, ext: '.png', start: 1, end: 60, fps: 30, width: 200 }
+    };
 
+    // 🚀 プリロード処理
+    const imageCache = {};
     function preloadImages() {
       console.log('Start preloading images...');
-      
       for (const [id, cfg] of Object.entries(stampConfig)) {
-        imageCache[id] = []; // 配列を初期化
-        
+        imageCache[id] = [];
         for (let i = cfg.start; i <= cfg.end; i++) {
-          // ゼロ埋め処理 (例: 1 -> "0001")
           const numStr = String(i).padStart(cfg.digits, '0');
           const src = `${cfg.folder}${cfg.prefix}${numStr}${cfg.ext}`;
-          
           const img = new Image();
           img.src = src;
-          imageCache[id].push(img); // メモリに保存
+          imageCache[id].push(img);
         }
       }
       console.log('Preload complete!');
     }
-
-    // ページ読み込み時に実行
     window.onload = preloadImages;
 
-
     // ==========================================
-    // 🎬 アニメーション再生処理
+    // 🚦 負荷対策設定
     // ==========================================
-    socket.on('configUpdate', (config) => currentConfig = config);
+    const MAX_ACTIVE_STAMPS = 10; 
+    let activeStampCount = 0;
+    const GLOBAL_THROTTLE_MS = 100; // 少し短くしました（Ratioで制御できるため）
+    let lastGlobalTriggerTime = 0;
 
+    // --- 設定反映 ---
+    socket.on('configUpdate', (config) => {
+      currentConfig = config;
+      if (config.reactionColor && glowLayer) glowLayer.style.backgroundColor = config.reactionColor;
+      if (config.djNameText && djNameDisplay) djNameDisplay.innerText = config.djNameText;
+    });
+
+    // --- スタンプ生成処理 ---
     socket.on('reactionTrigger', (data) => {
       const id = data.id;
-      // 設定がないIDなら何もしない、またはデフォルト処理
       if (!stampConfig[id] || !imageCache[id] || imageCache[id].length === 0) return;
 
-      const cfg = stampConfig[id];
-      const frames = imageCache[id]; // プリロード済み画像配列
+      // 🎲 1. 確率による間引き (Ratio Check)
+      // displayRatioが 0.5 なら 50% の確率で弾く
+      // 設定値がない場合は 1.0 (全通し) とする
+      const ratio = currentConfig.displayRatio !== undefined ? currentConfig.displayRatio : 1.0;
+      if (Math.random() > ratio) {
+        return; 
+      }
 
-      // 表示要素を作成
+      // 🚫 2. スロットリング & 個数制限
+      const now = Date.now();
+      if (now - lastGlobalTriggerTime < GLOBAL_THROTTLE_MS) return;
+      if (activeStampCount >= MAX_ACTIVE_STAMPS) return;
+
+      activeStampCount++;
+      lastGlobalTriggerTime = now;
+
+      const cfg = stampConfig[id];
+      const frames = imageCache[id];
+
+      // --- 位置計算 ---
+      const CX = window.innerWidth * 0.5;
+      const CY = window.innerHeight * (500 / 1080);
+      const RADIUS = window.innerHeight * (500 / 1080);
+      const angle = Math.random() * 2 * Math.PI;
+
+      let currentX = CX + Math.cos(angle) * RADIUS;
+      let currentY = CY + Math.sin(angle) * RADIUS;
+
+      // 要素生成
       const el = document.createElement('div');
       el.className = 'visual-object';
-      
-      const x = Math.random() * window.innerWidth;
-      const y = Math.random() * window.innerHeight;
-      
-      el.style.left = x + 'px';
-      el.style.top = y + 'px';
       el.style.width = cfg.width + 'px';
-      el.style.height = cfg.width + 'px'; // 正方形とする
+      el.style.height = cfg.width + 'px';
       el.style.background = 'transparent';
       
-      // 画像表示用のimgタグ
       const imgTag = document.createElement('img');
       imgTag.style.width = '100%';
       imgTag.style.height = '100%';
       imgTag.style.objectFit = 'contain';
-      
-      // 最初のフレームを表示
       imgTag.src = frames[0].src;
       
       el.appendChild(imgTag);
@@ -136,29 +129,61 @@
       // --- アニメーションループ ---
       let frameIndex = 0;
       let lastTime = performance.now();
-      const interval = 1000 / cfg.fps; // 1フレームあたりの時間(ms)
+      const startTime = lastTime; // 生成時刻を記録
+      const interval = 1000 / cfg.fps;
+      
+      const baseSpeed = window.innerHeight * 0.002;
+      const speed = baseSpeed * (1.5 + Math.random() * 2); 
+      const vx = Math.cos(angle) * speed;
+      const vy = Math.sin(angle) * speed;
 
       function loop(currentTime) {
-        if (!el.parentNode) return; // 要素が消えてたら終了
+        if (!el.parentNode) return;
 
+        // 1. ⏱️ 寿命判定 (Duration Check)
+        const duration = currentConfig.displayDuration || 2000;
+        if (currentTime - startTime > duration) {
+          el.remove();
+          activeStampCount--;
+          return;
+        }
+
+        // 移動更新
+        currentX += vx;
+        currentY += vy;
+        
+        // 描画座標（左上）
+        const drawX = currentX - (cfg.width / 2);
+        const drawY = currentY - (cfg.width / 2);
+        
+        el.style.transform = `translate3d(${drawX}px, ${drawY}px, 0)`;
+
+        // 2. 🚫 画面外判定 (Off-screen Check) [NEW!]
+        // 画面の上下左右どっちかにはみ出して見えなくなったら消す
+        if (
+          drawX > window.innerWidth ||  // 右に消えた
+          drawX + cfg.width < 0 ||      // 左に消えた
+          drawY > window.innerHeight || // 下に消えた
+          drawY + cfg.width < 0         // 上に消えた
+        ) {
+          el.remove();
+          activeStampCount--;
+          return; // ここで終了
+        }
+
+        // 3. 🎞️ 画像切り替え (ループ再生)
         const deltaTime = currentTime - lastTime;
-
         if (deltaTime > interval) {
           lastTime = currentTime - (deltaTime % interval);
           
-          frameIndex++; // 次のフレームへ
-
-          if (frameIndex < frames.length) {
-            // 画像を差し替え
-            imgTag.src = frames[frameIndex].src;
-            requestAnimationFrame(loop);
-          } else {
-            // 最後のフレームまで再生したら削除
-            el.remove();
+          frameIndex++;
+          if (frameIndex >= frames.length) {
+            frameIndex = 0; // ループ
           }
-        } else {
-          requestAnimationFrame(loop);
+          imgTag.src = frames[frameIndex].src;
         }
+        
+        requestAnimationFrame(loop);
       }
 
       requestAnimationFrame(loop);
