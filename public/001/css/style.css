@@ -310,7 +310,6 @@ section {
 
 .loc-fee {
   font-size: clamp(20px, 2.5vw, 32px);
-  font-weight: 300;
   text-align: center;
 }
 
