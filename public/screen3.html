@@ -2,38 +2,167 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>TetraPod Screen 3</title>
+  <title>TetraPod Screen 3 - Ripple</title>
   <link rel="stylesheet" href="css/style.css">
   <style>
-    body { transition: background-color 0.1s; }
+    /* この画面専用のスタイル */
+    body {
+        background-color: #000; /* 背景は真っ黒 */
+        margin: 0;
+        overflow: hidden; /* スクロールバーを出さない */
+    }
+    /* Canvasを画面いっぱいに */
+    canvas#dotCanvas {
+        display: block;
+        position: absolute;
+        top: 0; left: 0;
+    }
   </style>
 </head>
-<body class="grid-bg">
-  <div class="container">
-    <h1>Screen 3 (Shake)</h1>
-    <h2 id="shakeStatus" style="font-size: 5rem; opacity: 0.3;">SHAKE IT</h2>
-  </div>
+<body>
+  
+  <canvas id="dotCanvas"></canvas>
+
+  <h1 style="position:absolute; top:10px; left:20px; z-index:20; color:white; opacity:0.3; font-family: sans-serif;">
+    Screen 3 (Shake Ripples)
+  </h1>
 
   <script src="/socket.io/socket.io.js"></script>
   <script>
     const socket = io();
-    const status = document.getElementById('shakeStatus');
-    let timer = null;
+    let currentConfig = {};
 
-    socket.on('shakeTrigger', (data) => {
-      // シェイク強度に応じて演出
-      // 背景をフラッシュさせる
-      document.body.style.backgroundColor = '#333';
-      status.style.opacity = 1;
-      status.style.transform = `scale(${1 + Math.random()})`;
+    socket.on('configUpdate', (config) => currentConfig = config);
 
-      if(timer) clearTimeout(timer);
-      timer = setTimeout(() => {
-        document.body.style.backgroundColor = '#111';
-        status.style.opacity = 0.3;
-        status.style.transform = 'scale(1)';
-      }, 200);
+    // ==========================================
+    // 🎨 Canvas & ドット設定
+    // ==========================================
+    const canvas = document.getElementById('dotCanvas');
+    const ctx = canvas.getContext('2d');
+
+    let width, height;
+    
+    // 【調整パラメータ】
+    const GRID_SPACING = 40;      // ドットの間隔 (px)
+    const BASE_DOT_RADIUS = 2;    // 通常時のドット半径 (px)
+    const MAX_DOT_RADIUS_ADD = 8; // 波が来た時に最大どれだけ大きくなるか (px)
+    const WAVE_SPEED = 0.5;       // 波紋が広がる速度 (px/ミリ秒)
+    const WAVE_WIDTH = 120;       // 波紋の「帯」の太さ (px)
+
+    let dots = [];    // ドットの座標リスト
+    let ripples = []; // 発生中の波紋リスト
+
+    // 画面サイズに合わせてCanvasとドット配置を初期化
+    function init() {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+      
+      dots = [];
+      // 画面全体に等間隔に点を配置
+      for (let x = GRID_SPACING / 2; x < width; x += GRID_SPACING) {
+        for (let y = GRID_SPACING / 2; y < height; y += GRID_SPACING) {
+          dots.push({ x, y });
+        }
+      }
+    }
+    
+    // ウィンドウサイズが変わったら再計算
+    window.addEventListener('resize', init);
+    init(); // 初回実行
+
+
+    // ==========================================
+    // 🌊 シェイク受信時の処理
+    // ==========================================
+    socket.on('shake', (data) => {
+      // 画面下部(少し外側)のランダムなX座標を起点にする
+      const startX = Math.random() * width;
+      const startY = height + WAVE_WIDTH / 2; 
+
+      // 新しい波紋をリストに追加
+      ripples.push({
+        x: startX,
+        y: startY,
+        startTime: performance.now(), // 発生時刻を記録
+        intensity: data.intensity     // (将来的な拡張用)
+      });
     });
+
+
+    // ==========================================
+    // 🎬 描画ループ (アニメーション)
+    // ==========================================
+    function draw() {
+      // 前のフレームを黒で塗りつぶしてクリア
+      ctx.fillStyle = '#000';
+      ctx.fillRect(0, 0, width, height);
+      
+      const now = performance.now();
+      
+      // --- ドットの描画処理 ---
+      dots.forEach(dot => {
+        let currentRadius = BASE_DOT_RADIUS;
+        let alphaAdd = 0; // 明るさの追加分
+
+        // このドットが、いずれかの波紋の「帯」の中にあるかチェック
+        ripples.forEach(ripple => {
+            const elapsedTime = now - ripple.startTime;
+            const waveRadius = elapsedTime * WAVE_SPEED; // 現在の波の半径
+            
+            // ドットと波源の距離を計算
+            const dx = dot.x - ripple.x;
+            const dy = dot.y - ripple.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+
+            // 波の帯の中心からの距離
+            const distFromWaveCenter = Math.abs(dist - waveRadius);
+            
+            // 波の帯の範囲内か？
+            if (distFromWaveCenter < WAVE_WIDTH / 2) {
+                // 波の中心に近いほど影響を強くする (0.0 〜 1.0)
+                // cosを使って滑らかな山なりのカーブを作る
+                const effect = Math.cos((distFromWaveCenter / (WAVE_WIDTH / 2)) * (Math.PI / 2));
+                
+                // 影響度に応じて半径を大きくし、明るくする
+                currentRadius += MAX_DOT_RADIUS_ADD * effect;
+                alphaAdd += effect * 0.8; // 最大0.8加算
+            }
+        });
+
+        // ドットを描画
+        ctx.beginPath();
+        ctx.arc(dot.x, dot.y, currentRadius, 0, Math.PI * 2);
+        
+        // 色の決定
+        const baseAlpha = 0.2; // 通常時の薄さ
+        const finalAlpha = Math.min(1.0, baseAlpha + alphaAdd);
+        
+        // 管理画面の色設定があればそれを使う、なければ白
+        const color = currentConfig.reactionColor || '#ffffff';
+        
+        // RGB成分を取り出してrgba形式にする簡易処理
+        // (もっと厳密にやるならhexToRgb関数などが必要だが今回は簡易的に)
+        ctx.fillStyle = color.replace(')', `, ${finalAlpha})`).replace('rgb', 'rgba');
+        if(color.startsWith('#')) {
+            // HEXの場合の簡易対応 (白く光らせる)
+            ctx.fillStyle = `rgba(255, 255, 255, ${finalAlpha})`;
+        }
+
+        ctx.fill();
+      });
+
+      // --- 古い波紋の削除 ---
+      // 画面の対角線より遠くまで広がったら不要なので削除
+      const maxDist = Math.sqrt(width * width + height * height) + WAVE_WIDTH;
+      ripples = ripples.filter(ripple => {
+          const elapsedTime = now - ripple.startTime;
+          return (elapsedTime * WAVE_SPEED) < maxDist;
+      });
+
+      requestAnimationFrame(draw); // 次のフレームへ
+    }
+
+    draw(); // ループ開始
   </script>
 </body>
 </html>
