@@ -248,22 +248,33 @@ img {
 
   /* Banner Section */
   .event-banner-section {
+    width: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center; 
     gap: 30px;
     margin-bottom: 80px;
   }
+  
   .title-logo {
     width: 80%;
     max-width: 300px;
     height: auto;
+    
+    position: static; 
+    transform: none; 
+    margin: 0 auto; 
   }
+  
   .event-banner {
     width: 90%;
     max-width: 500px;
     height: auto;
     border-radius: 4px;
+    position: static; 
+    transform: none; 
+    margin: 0 auto; 
   }
 
   /* Organizer Section */
