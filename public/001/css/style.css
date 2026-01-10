@@ -452,3 +452,102 @@ section {
     color: rgba(255, 255, 255, 0.7);
   }
 }
+
+/* =========================================
+   お問い合わせポップアップ用スタイル
+   ========================================= */
+/* 背景の黒いオーバーレイ */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background-color: rgba(0, 0, 0, 0.8); /* 背景を暗く */
+  z-index: 9999; /* 最前面に */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.3s, visibility 0.3s;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+/* 表示状態（JSで制御） */
+.modal-overlay.active {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+/* 白い箱（コンテンツエリア） */
+.modal-content {
+  background-color: white;
+  color: #333;
+  width: 100%;
+  max-width: 800px;
+  max-height: 90vh; /* 画面からはみ出さない */
+  border-radius: 8px;
+  padding: 40px;
+  position: relative;
+  overflow-y: auto; /* 縦スクロール可能に */
+  box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+}
+
+/* 閉じるボタン */
+.modal-close-btn {
+  position: absolute;
+  top: 15px; right: 20px;
+  background: none;
+  border: none;
+  font-size: 32px;
+  line-height: 1;
+  cursor: pointer;
+  color: #333;
+}
+.modal-close-btn:hover { color: #d00; }
+
+/* タイトルと説明 */
+.modal-title {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 20px;
+  text-align: center;
+  font-family: 'Noto Sans JP', sans-serif;
+  color: #002040;
+}
+.modal-desc {
+  font-size: 14px;
+  line-height: 1.6;
+  margin-bottom: 30px;
+  text-align: left;
+  background: #f0f0f0;
+  padding: 15px;
+  border-radius: 4px;
+}
+
+/* Googleフォーム埋め込みのレスポンシブ対応 */
+.google-form-wrapper {
+  position: relative;
+  width: 100%;
+  height: 0;
+  padding-bottom: 100%; /* 高さを確保 */
+  overflow: hidden;
+}
+.google-form-wrapper iframe {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  border: none;
+}
+
+/* スマホ調整 */
+@media screen and (max-width: 600px) {
+  .modal-content {
+    padding: 20px;
+    max-height: 95vh;
+  }
+  .modal-title { font-size: 20px; }
+  .modal-desc { font-size: 12px; }
+}
