@@ -2,203 +2,297 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>TetraPod Control</title>
-  <link rel="stylesheet" href="css/style.css">
+  <title>TetraPod Control (Master Scale)</title>
   <style>
-    /* 既存のスタイル */
-    input[type="text"], input[type="number"] { padding: 10px; margin: 5px; width: 80%; box-sizing: border-box; }
-    label { display: block; margin-top: 20px; font-weight: bold; color: #aaa; font-size: 0.9rem;}
+    /* 基本レイアウト */
+    body { margin: 0; padding: 20px; background-color: #111; color: white; font-family: sans-serif; overflow-y: auto; min-height: 100vh; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; }
+    .container { width: 100%; max-width: 600px; padding-bottom: 80px; }
     
-    .control-section {
-      background: #222;
-      padding: 20px;
-      margin-bottom: 15px;
-      border-radius: 12px;
-      width: 100%;
-      max-width: 500px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-    }
+    /* セクションスタイル */
+    .control-section { background: #222; padding: 20px; margin-bottom: 15px; border-radius: 12px; width: 100%; box-sizing: border-box; box-shadow: 0 4px 10px rgba(0,0,0,0.5); border: 1px solid #333; }
+    .section-title { margin-top: 0; margin-bottom: 10px; font-size: 1.1rem; border-bottom: 1px solid #555; padding-bottom: 5px; color: #fff; }
     
-    #applyBtn {
-      margin-top: 20px;
-      padding: 15px 40px;
-      font-size: 1.2rem;
-      cursor: pointer;
-      transition: background-color 0.3s;
-      background: #fff;
-      color: #000;
-      border: none;
-      border-radius: 30px;
-      font-weight: bold;
-      width: 100%;
-      max-width: 300px;
-    }
+    /* 個別スクリーンごとの枠 */
+    .screen-box { background: #333; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 5px solid #666; overflow: hidden; }
+    .screen-box.s1 { border-left-color: #ff5252; }
+    .screen-box.s2 { border-left-color: #448aff; }
+    .screen-box.s3 { border-left-color: #69f0ae; }
 
-    /* スライダー用 */
-    .slider-row { display: flex; align-items: center; margin-bottom: 10px; }
-    .slider-label { width: 30px; font-weight: bold; }
-    .slider-val { width: 50px; text-align: right; font-family: monospace; margin-left: 10px; }
-    input[type="range"] { flex-grow: 1; cursor: pointer; }
+    /* 折りたたみ用 */
+    details summary { cursor: pointer; outline: none; list-style: none; display: flex; justify-content: space-between; align-items: center; }
+    details summary::-webkit-details-marker { display: none; }
+    details summary::after { content: '▼'; font-size: 0.8rem; color: #aaa; margin-left: 10px; transition: transform 0.2s; }
+    details[open] summary::after { transform: rotate(180deg); }
     
-    /* HSVスライダー */
-    #hRange {
-      background: linear-gradient(to right, red, yellow, lime, cyan, blue, magenta, red);
-      appearance: none; height: 6px; border-radius: 3px;
-    }
-    #hRange::-webkit-slider-thumb {
-      appearance: none; width: 18px; height: 18px; border-radius: 50%; background: #fff; border: 2px solid #555; cursor: pointer;
-    }
-    #colorPreview { width: 100%; height: 40px; margin-top: 15px; border-radius: 6px; border: 2px solid #444; }
+    .screen-label { font-weight: bold; font-size: 1.1rem; margin: 0; }
+    .sub-label { font-size: 0.85rem; color: #ccc; margin-bottom: 2px; display: block; }
+    
+    /* 入力パーツ共通 */
+    input[type="text"], input[type="number"], select { padding: 12px; margin: 5px 0 15px 0; width: 100%; box-sizing: border-box; background: #111; border: 1px solid #555; color: white; border-radius: 4px; font-size: 1rem; }
+    input[type="text"]:focus, select:focus { border-color: #4CAF50; outline: none; background: #000; }
+    
+    /* プルダウンの矢印調整 */
+    select { cursor: pointer; appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23FFFFFF%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E"); background-repeat: no-repeat; background-position: right 12px top 50%; background-size: 12px auto; }
+
+    .slider-row { display: flex; align-items: center; margin-bottom: 10px; }
+    .slider-val { width: 40px; text-align: right; font-family: monospace; margin-left: 10px; font-size: 0.9rem; }
+    input[type="range"] { flex-grow: 1; cursor: pointer; }
+
+    /* APPLYボタン */
+    #applyBtn { margin-top: 10px; padding: 15px; font-size: 1.2rem; cursor: pointer; background: #fff; color: #000; border: none; border-radius: 30px; font-weight: bold; width: 100%; margin-bottom: 40px; transition: 0.2s; }
+    #applyBtn:hover { transform: scale(1.02); }
+
+    /* HSV Slider */
+    #hRange { background: linear-gradient(to right, red, yellow, lime, cyan, blue, magenta, red); appearance: none; height: 6px; border-radius: 3px; }
+    #colorPreview { width: 100%; height: 30px; margin-top: 5px; border-radius: 4px; border: 1px solid #555; }
+    
+    .preset-section { border: 2px solid #FFD700; background: #2a2a20; }
+    #customInputArea { display: none; border-top: 1px dashed #555; padding-top: 10px; margin-top: -5px; }
   </style>
 </head>
 <body>
+
   <div class="container">
     <h1>Control Panel</h1>
-    
-    <div class="control-section">
-      <label>DJ / VJ Name</label>
-      <input type="text" id="djNameInput" placeholder="Enter DJ Name">
+
+    <details class="screen-box s1" >
+      <summary class="screen-label" style="color:#ff8a80;">Screen 1 (Book Fold)</summary>
+      <div style="margin-top: 15px;">
+        <span class="sub-label">Overall Scale (Size)</span>
+        <div class="slider-row"><input type="range" id="s1_masterScale" min="0.1" max="2.0" step="0.1" value="1.0"><span class="slider-val" id="val_s1_masterScale">1.0</span></div>
+        
+        <span class="sub-label">Fold Angle (M-Shape)</span>
+        <div class="slider-row"><input type="range" id="s1_fold" min="-60" max="60" value="20"><span class="slider-val" id="val_s1_fold">20</span></div>
+        <span class="sub-label">Scale X (Width)</span>
+        <div class="slider-row"><input type="range" id="s1_scaleX" min="0.5" max="3.0" step="0.1" value="1.0"><span class="slider-val" id="val_s1_scaleX">1.0</span></div>
+        <span class="sub-label">Skew Y (Center Up)</span>
+        <div class="slider-row"><input type="range" id="s1_skewY" min="-30" max="30" value="0"><span class="slider-val" id="val_s1_skewY">0</span></div>
+        <span class="sub-label">Perspective</span>
+        <div class="slider-row"><input type="range" id="s1_persp" min="100" max="2000" step="10" value="800"><span class="slider-val" id="val_s1_persp">800</span></div>
+      </div>
+    </details>
+
+    <details class="screen-box s2" >
+      <summary class="screen-label" style="color:#82b1ff;">Screen 2 (Book Fold)</summary>
+      <div style="margin-top: 15px;">
+        <span class="sub-label">Overall Scale (Size)</span>
+        <div class="slider-row"><input type="range" id="s2_masterScale" min="0.1" max="2.0" step="0.1" value="1.0"><span class="slider-val" id="val_s2_masterScale">1.0</span></div>
+
+        <span class="sub-label">Fold Angle (M-Shape)</span>
+        <div class="slider-row"><input type="range" id="s2_fold" min="-60" max="60" value="20"><span class="slider-val" id="val_s2_fold">20</span></div>
+        <span class="sub-label">Scale X (Width)</span>
+        <div class="slider-row"><input type="range" id="s2_scaleX" min="0.5" max="3.0" step="0.1" value="1.0"><span class="slider-val" id="val_s2_scaleX">1.0</span></div>
+        <span class="sub-label">Skew Y (Center Up)</span>
+        <div class="slider-row"><input type="range" id="s2_skewY" min="-30" max="30" value="0"><span class="slider-val" id="val_s2_skewY">0</span></div>
+        <span class="sub-label">Perspective</span>
+        <div class="slider-row"><input type="range" id="s2_persp" min="100" max="2000" step="10" value="800"><span class="slider-val" id="val_s2_persp">800</span></div>
+      </div>
+    </details>
+
+    <details class="screen-box s3" >
+      <summary class="screen-label" style="color:#b9f6ca;">Screen 3 (Trapezoid)</summary>
+      <div style="margin-top: 15px;">
+        <span class="sub-label">Perspective (Cam Dist)</span>
+        <div class="slider-row"><input type="range" id="s3_persp" min="100" max="1000" step="10" value="250"><span class="slider-val" id="val_s3_persp">250</span></div>
+        <span class="sub-label">Rotate X (Tilt)</span>
+        <div class="slider-row"><input type="range" id="s3_rotate" min="-60" max="0" value="-10"><span class="slider-val" id="val_s3_rotate">-10</span></div>
+        <span class="sub-label">Scale Y (Height)</span>
+        <div class="slider-row"><input type="range" id="s3_scaleY" min="0.5" max="3.0" step="0.1" value="1.0"><span class="slider-val" id="val_s3_scaleY">1.0</span></div>
+      </div>
+    </details>
+
+    <div class="control-section preset-section">
+      <h3 class="section-title" style="color:#FFD700;">DJ / VJ Name Selection</h3>
+      <span class="sub-label">Select Preset Pair</span>
+      
+      <select id="presetSelect" onchange="toggleCustomInput()">
+        <option value="" disabled>-- Select Pair --</option>
+        <option value="0 METCH & noki">0 METCH & noki</option>
+        <option value="1 Oxojo & o_ER4">1 Oxojo & o_ER4</option>
+        <option value="2 Kentaro1043 & yn">2 Kentaro1043 & yn</option>
+        <option value="3 Yakibird & koc_hin">3 Yakibird & koc_hin</option>
+        <option value="4 senritu & el">4 senritu & el</option>
+        <option value="5 kenken & orioritu">5 kenken & orioritu</option>
+        <option value="6 slime & slime">6 slime & slime</option>
+        <option value="WAITING..." selected>WAITING...</option>
+        <option value="custom">📝 Custom / Free Input...</option>
+      </select>
+      
+      <div id="customInputArea">
+        <span class="sub-label">Free Text (Displayed on both screens)</span>
+        <input type="text" id="customNameInput" placeholder="Type Name Here" onclick="this.select()">
+      </div>
     </div>
 
     <div class="control-section">
-      <label style="margin-bottom: 15px;">Circle Glow Color (HSV)</label>
-      <div class="slider-row"><span class="slider-label">H</span><input type="range" id="hRange" min="0" max="360" value="120"><span class="slider-val" id="hVal">120</span></div>
-      <div class="slider-row"><span class="slider-label">S</span><input type="range" id="sRange" min="0" max="100" value="100"><span class="slider-val" id="sVal">100</span></div>
-      <div class="slider-row"><span class="slider-label">V</span><input type="range" id="vRange" min="0" max="100" value="100"><span class="slider-val" id="vVal">100</span></div>
+      <h3 class="section-title">Common Settings</h3>
+      <span class="sub-label">Color (HSV)</span>
+      <div class="slider-row"><input type="range" id="hRange" min="0" max="360" value="120"></div>
+      <div class="slider-row"><input type="range" id="sRange" min="0" max="100" value="100"></div>
+      <div class="slider-row"><input type="range" id="vRange" min="0" max="100" value="100"></div>
       <div id="colorPreview" style="background-color: #00ff00;"></div>
-    </div>
-    
-    <div class="control-section">
-      <label>Display Ratio (確率: 0% - 100%)</label>
-      <div class="slider-row">
-        <input type="range" id="ratioRange" min="0" max="100" value="100">
-        <span class="slider-val" id="ratioVal">100%</span>
-      </div>
-
-      <label>Display Duration (寿命: ms)</label>
-      <div class="slider-row">
-        <input type="range" id="durationRange" min="500" max="10000" step="100" value="2000">
-        <span class="slider-val" id="durationVal">2000</span>
-      </div>
-    </div>
-
-    <div class="control-section">
-      <label>Shake Sensitivity</label>
+      <div style="margin-top: 15px;"></div>
+      <span class="sub-label">Display Ratio (確率)</span>
+      <div class="slider-row"><input type="range" id="ratioRange" min="0" max="100" value="100"><span class="slider-val" id="ratioVal">100%</span></div>
+      <span class="sub-label">Duration (寿命)</span>
+      <div class="slider-row"><input type="range" id="durationRange" min="500" max="10000" step="100" value="2000"><span class="slider-val" id="durationVal">2000</span></div>
+      <span class="sub-label">Shake Sensitivity</span>
       <input type="number" id="shakeInput" value="80">
     </div>
 
-    <button id="applyBtn" onclick="updateSettings()">APPLY SETTINGS</button>
+    <button id="applyBtn">APPLY SETTINGS</button>
   </div>
 
   <script src="/socket.io/socket.io.js"></script>
   <script>
     const socket = io();
-    const djNameInput = document.getElementById('djNameInput');
-    const shakeInput = document.getElementById('shakeInput');
-    const applyBtn = document.getElementById('applyBtn');
 
-    // 追加: 表示調整用エレメント
-    const ratioRange = document.getElementById('ratioRange');
-    const ratioVal = document.getElementById('ratioVal');
-    const durationRange = document.getElementById('durationRange');
-    const durationVal = document.getElementById('durationVal');
+    const djPresets = {
+      "0 METCH & noki":        { s1: "METCH",       s2: "noki" },
+      "1 Oxojo & o_ER4":       { s1: "Oxojo",       s2: "o_ER4" },
+      "2 Kentaro1043 & yn":    { s1: "Kentaro1043", s2: "yn" },
+      "3 Yakibird & koc_hin":  { s1: "Yakibird",    s2: "koc_hin" },
+      "4 senritu & el":        { s1: "senritu",     s2: "el" },
+      "5 kenken & orioritu":   { s1: "kenken",      s2: "orioritu" },
+      "6 slime & slime":       { s1: "slime",       s2: "slime" },
+      "WAITING...":            { s1: "WAITING...",  s2: "WAITING..." }
+    };
 
-    // HSV Elements
-    const hRange = document.getElementById('hRange');
-    const sRange = document.getElementById('sRange');
-    const vRange = document.getElementById('vRange');
-    const hVal = document.getElementById('hVal');
-    const sVal = document.getElementById('sVal');
-    const vVal = document.getElementById('vVal');
-    const colorPreview = document.getElementById('colorPreview');
+    const el = (id) => document.getElementById(id);
+    const valEl = (id) => document.getElementById('val_' + id);
+    const presetSelect = el('presetSelect');
+    const customInputArea = el('customInputArea');
+    const customNameInput = el('customNameInput');
 
-    // 現在の設定を受信してフォームに反映
-    socket.on('configUpdate', (config) => {
-      shakeInput.value = config.shakeSensitivity;
-      if(config.djNameText) djNameInput.value = config.djNameText;
+    window.toggleCustomInput = function() {
+      if (presetSelect.value === 'custom') {
+        customInputArea.style.display = 'block';
+        customNameInput.focus();
+      } else {
+        customInputArea.style.display = 'none';
+      }
+    };
+
+    // IDリストに masterScale を追加
+    const inputs = {
+      s1_masterScale: 's1_masterScale', // New
+      s1_fold: 's1_fold', s1_scaleX: 's1_scaleX', s1_skewY: 's1_skewY', s1_persp: 's1_persp',
       
-      // 追加項目の反映
-      if(config.displayDuration) {
-        durationRange.value = config.displayDuration;
-        durationVal.innerText = config.displayDuration;
-      }
-      if(config.displayRatio !== undefined) {
-        const percent = Math.round(config.displayRatio * 100);
-        ratioRange.value = percent;
-        ratioVal.innerText = percent + '%';
-      }
+      s2_masterScale: 's2_masterScale', // New
+      s2_fold: 's2_fold', s2_scaleX: 's2_scaleX', s2_skewY: 's2_skewY', s2_persp: 's2_persp',
       
-      if(config.reactionColor) {
-        const [h, s, v] = hexToHsv(config.reactionColor);
-        hRange.value = h; sRange.value = s; vRange.value = v;
-        updatePreview();
-      }
+      s3_persp: 's3_persp', s3_rotate: 's3_rotate', s3_scaleY: 's3_scaleY',
+      h: 'hRange', s: 'sRange', v: 'vRange',
+      ratio: 'ratioRange', dur: 'durationRange', shake: 'shakeInput'
+    };
+
+    function updateUI() {
+      Object.keys(inputs).forEach(key => {
+        const id = inputs[key];
+        const valElem = valEl(id);
+        const elem = el(id);
+        if(valElem && elem) valElem.innerText = elem.value;
+      });
+      el('ratioVal').innerText = el('ratioRange').value + '%';
+      el('durationVal').innerText = el('durationRange').value;
+      el('colorPreview').style.backgroundColor = hsvToHex(el('hRange').value, el('sRange').value, el('vRange').value);
+    }
+
+    Object.values(inputs).forEach(id => {
+      const elem = el(id);
+      if(elem && (elem.type === 'range' || elem.id.includes('Range'))) elem.addEventListener('input', updateUI);
     });
 
-    // イベントリスナー
-    [hRange, sRange, vRange].forEach(el => el.addEventListener('input', updatePreview));
-    
-    ratioRange.addEventListener('input', (e) => { ratioVal.innerText = e.target.value + '%'; });
-    durationRange.addEventListener('input', (e) => { durationVal.innerText = e.target.value; });
+    socket.on('configUpdate', (config) => {
+      if(config.s1) {
+        if(config.s1.masterScale !== undefined) el('s1_masterScale').value = config.s1.masterScale; // New
+        if(config.s1.fold !== undefined) el('s1_fold').value = config.s1.fold;
+        if(config.s1.scaleX !== undefined) el('s1_scaleX').value = config.s1.scaleX;
+        if(config.s1.skewY !== undefined) el('s1_skewY').value = config.s1.skewY;
+        if(config.s1.persp !== undefined) el('s1_persp').value = config.s1.persp;
+      }
+      if(config.s2) {
+        if(config.s2.masterScale !== undefined) el('s2_masterScale').value = config.s2.masterScale; // New
+        if(config.s2.fold !== undefined) el('s2_fold').value = config.s2.fold;
+        if(config.s2.scaleX !== undefined) el('s2_scaleX').value = config.s2.scaleX;
+        if(config.s2.skewY !== undefined) el('s2_skewY').value = config.s2.skewY;
+        if(config.s2.persp !== undefined) el('s2_persp').value = config.s2.persp;
+      }
+      if(config.s3) {
+        if(config.s3.persp !== undefined) el('s3_persp').value = config.s3.persp;
+        if(config.s3.rotate !== undefined) el('s3_rotate').value = config.s3.rotate;
+        if(config.s3.scaleY !== undefined) el('s3_scaleY').value = config.s3.scaleY;
+      }
+      if(config.reactionColor) {
+        const [h, s, v] = hexToHsv(config.reactionColor);
+        el('hRange').value = h; el('sRange').value = s; el('vRange').value = v;
+      }
+      if(config.displayRatio !== undefined) el('ratioRange').value = Math.round(config.displayRatio * 100);
+      if(config.displayDuration !== undefined) el('durationRange').value = config.displayDuration;
+      if(config.shakeSensitivity !== undefined) el('shakeInput').value = config.shakeSensitivity;
 
-    function updatePreview() {
-      hVal.innerText = hRange.value; sVal.innerText = sRange.value; vVal.innerText = vRange.value;
-      colorPreview.style.backgroundColor = hsvToHex(hRange.value, sRange.value, vRange.value);
-    }
+      updateUI();
+    });
 
-    function updateSettings() {
-      const hexColor = hsvToHex(hRange.value, sRange.value, vRange.value);
+    el('applyBtn').addEventListener('click', () => {
+      
+      const selectVal = presetSelect.value;
+      let nameForS1 = "WAITING...";
+      let nameForS2 = "WAITING...";
 
-      socket.emit('updateConfig', {
-        reactionColor: hexColor,
-        shakeSensitivity: parseInt(shakeInput.value),
-        djNameText: djNameInput.value,
-        // 追加項目を送信
-        displayDuration: parseInt(durationRange.value),
-        displayRatio: parseInt(ratioRange.value) / 100 // 0~100 を 0.0~1.0 に変換
-      });
+      if (selectVal === "custom") {
+        const customText = customNameInput.value;
+        nameForS1 = customText;
+        nameForS2 = customText;
+      } else if (selectVal && djPresets[selectVal]) {
+        nameForS1 = djPresets[selectVal].s1;
+        nameForS2 = djPresets[selectVal].s2;
+      }
 
-      // ボタン演出
-      const originalText = applyBtn.innerText;
-      const originalBg = applyBtn.style.background;
-      applyBtn.innerText = 'UPDATED! ✅';
-      applyBtn.style.background = '#4CAF50';
-      applyBtn.style.color = 'white';
-      applyBtn.disabled = true;
+      const data = {
+        s1: {
+          name: nameForS1,
+          masterScale: parseFloat(el('s1_masterScale').value), // New
+          fold: parseInt(el('s1_fold').value),
+          scaleX: parseFloat(el('s1_scaleX').value),
+          skewY: parseInt(el('s1_skewY').value),
+          persp: parseInt(el('s1_persp').value)
+        },
+        s2: {
+          name: nameForS2,
+          masterScale: parseFloat(el('s2_masterScale').value), // New
+          fold: parseInt(el('s2_fold').value),
+          scaleX: parseFloat(el('s2_scaleX').value),
+          skewY: parseInt(el('s2_skewY').value),
+          persp: parseInt(el('s2_persp').value)
+        },
+        s3: {
+          persp: parseInt(el('s3_persp').value),
+          rotate: parseInt(el('s3_rotate').value),
+          scaleY: parseFloat(el('s3_scaleY').value)
+        },
+        reactionColor: hsvToHex(el('hRange').value, el('sRange').value, el('vRange').value),
+        displayRatio: parseInt(el('ratioRange').value) / 100,
+        displayDuration: parseInt(el('durationRange').value),
+        shakeSensitivity: parseInt(el('shakeInput').value)
+      };
+
+      socket.emit('updateConfig', data);
+
+      const btn = el('applyBtn');
+      const origText = btn.innerText;
+      btn.innerText = 'UPDATED! ✅';
+      btn.style.background = '#4CAF50';
+      btn.style.color = 'white';
       setTimeout(() => {
-        applyBtn.innerText = originalText;
-        applyBtn.style.background = originalBg;
-        applyBtn.style.color = '#000';
-        applyBtn.disabled = false;
+        btn.innerText = origText;
+        btn.style.background = '#fff';
+        btn.style.color = '#000';
       }, 1000);
-    }
+    });
 
-    // --- 🛠️ 変換ロジック (変更なし) ---
-    function hsvToHex(h, s, v) {
-      s /= 100; v /= 100;
-      let c = v * s, x = c * (1 - Math.abs(((h / 60) % 2) - 1)), m = v - c, r = 0, g = 0, b = 0;
-      if (0 <= h && h < 60) { r = c; g = x; b = 0; }
-      else if (60 <= h && h < 120) { r = x; g = c; b = 0; }
-      else if (120 <= h && h < 180) { r = 0; g = c; b = x; }
-      else if (180 <= h && h < 240) { r = 0; g = x; b = c; }
-      else if (240 <= h && h < 300) { r = x; g = 0; b = c; }
-      else if (300 <= h && h < 360) { r = c; g = 0; b = x; }
-      r = Math.round((r + m) * 255).toString(16).padStart(2, '0');
-      g = Math.round((g + m) * 255).toString(16).padStart(2, '0');
-      b = Math.round((b + m) * 255).toString(16).padStart(2, '0');
-      return `#${r}${g}${b}`;
-    }
-    function hexToHsv(hex) { /* (省略: 前回と同じ) */ 
-      let r = 0, g = 0, b = 0;
-      if (hex.length === 4) { r = parseInt("0x" + hex[1] + hex[1]); g = parseInt("0x" + hex[2] + hex[2]); b = parseInt("0x" + hex[3] + hex[3]); } 
-      else if (hex.length === 7) { r = parseInt("0x" + hex.substring(1, 3)); g = parseInt("0x" + hex.substring(3, 5)); b = parseInt("0x" + hex.substring(5, 7)); }
-      r /= 255; g /= 255; b /= 255;
-      let cmin = Math.min(r, g, b), cmax = Math.max(r, g, b), delta = cmax - cmin, h = 0, s = 0, v = 0;
-      if (delta === 0) h = 0; else if (cmax === r) h = ((g - b) / delta) % 6; else if (cmax === g) h = (b - r) / delta + 2; else h = (r - g) / delta + 4;
-      h = Math.round(h * 60); if (h < 0) h += 360;
-      v = Math.round(cmax * 100); s = cmax === 0 ? 0 : Math.round((delta / cmax) * 100);
-      return [h, s, v];
-    }
+    function hsvToHex(h,s,v){s/=100;v/=100;let c=v*s,x=c*(1-Math.abs(((h/60)%2)-1)),m=v-c,r=0,g=0,b=0;if(0<=h&&h<60){r=c;g=x;b=0}else if(60<=h&&h<120){r=x;g=c;b=0}else if(120<=h&&h<180){r=0;g=c;b=x}else if(180<=h&&h<240){r=0;g=x;b=c}else if(240<=h&&h<300){r=x;g=0;b=c}else if(300<=h&&h<360){r=c;g=0;b=x}return"#"+[r,g,b].map(x=>Math.round((x+m)*255).toString(16).padStart(2,"0")).join("")}
+    function hexToHsv(hex){let r=0,g=0,b=0;if(hex.length===4){r=parseInt("0x"+hex[1]+hex[1]);g=parseInt("0x"+hex[2]+hex[2]);b=parseInt("0x"+hex[3]+hex[3])}else if(hex.length===7){r=parseInt("0x"+hex.substring(1,3));g=parseInt("0x"+hex.substring(3,5));b=parseInt("0x"+hex.substring(5,7))}r/=255;g/=255;b/=255;let cmin=Math.min(r,g,b),cmax=Math.max(r,g,b),d=cmax-cmin,h=0,s=0,v=0;if(d===0)h=0;else if(cmax===r)h=((g-b)/d)%6;else if(cmax===g)h=(b-r)/d+2;else h=(r-g)/d+4;h=Math.round(h*60);if(h<0)h+=360;v=Math.round(cmax*100);s=cmax===0?0:Math.round((d/cmax)*100);return[h,s,v]}
   </script>
 </body>
 </html>

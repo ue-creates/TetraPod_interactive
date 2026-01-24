@@ -6,7 +6,22 @@ body {
   color: #fff;
   overflow: hidden;
   touch-action: manipulation; /* スマホでのダブルタップ拡大防止 */
+
+    /* 画面中央寄せ */
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
+
+.screen-trapezoid {
+  width: 100%;
+  height: 100%;
+  /* 変形設定 */
+  transform-origin: top center;
+  transform: perspective(500px) rotateX(-15deg) scale(1.0, 1.8); 
+  /* ↑ perspectiveを300pxにして、歪みをキツくしました。これで変化が分かりやすくなるはず */
+}
+
 .container {
   display: flex;
   flex-direction: column;
@@ -175,7 +190,7 @@ body {
   font-family: "Arial Black", sans-serif;
   font-weight: 900;
   letter-spacing: 2px;
-  text-transform: uppercase; /* 強制的に大文字にする */
+  /* text-transform: uppercase; 強制的に大文字にする */
   
   /* 白い長方形 */
   background-color: white;
@@ -184,3 +199,4 @@ body {
   /* 少し影をつけて浮かせる */
   /* box-shadow: 0 10px 30px rgba(0,0,0,0.5); */
 }
+
