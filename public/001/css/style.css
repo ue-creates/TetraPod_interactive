@@ -272,19 +272,27 @@ section {
   padding-right: 20px;
 }
 
-/* 右列: Coming Soon */
-.tt-comingsoon {
-  grid-column: 2 / 4;
+/* 右列: Artists */
+.tt-djs, .tt-vjs {
   display: flex;
-  align-items: center;
-  justify-content: center;
+  flex-direction: column;
+  gap: 0;
   
-  font-family: 'Lexend Mega', sans-serif;
-  font-weight: 300;
-  font-size: clamp(32px, 5vw, 64px);
-  opacity: 0.8;
-  letter-spacing: -0.05em;
-  padding-left: 20px;
+  font-family: 'Lexend Mega', 'Noto Sans JP', sans-serif;
+  font-weight: 700;
+  font-size: clamp(16px, 2.5vw, 32px);
+  
+  line-height: 2.0;
+  text-align: center;
+}
+
+.tt-djs {
+  grid-column: 2;
+  border-right: 1px solid rgba(255,255,255,0.3);
+}
+
+.tt-vjs {
+  grid-column: 3;
 }
 
 /* =========================================
