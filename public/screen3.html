@@ -23,8 +23,9 @@
       height: 100%;
       position: relative;
       
-      /* 上端を固定して変形させる */
-      transform-origin: top center;
+      /* 👇 ここを変更: 回転軸を下端にする */
+      transform-origin: bottom center;
+      
       /* 滑らかに動かす */
       transition: transform 0.1s linear; 
       will-change: transform;
@@ -55,7 +56,7 @@
 
     let currentConfig = { reactionColor: '#00ff00' };
     
-    // 📐 変形パラメータ (Screen 1と同じ初期値にしておく)
+    // 📐 変形パラメータ
     let currentTransform = {
       perspective: 250,
       rotateX: -10,
@@ -77,10 +78,10 @@
       currentConfig = config;
 
       // 🟢 Screen 3 個別設定 (config.s3)
-      if (config.s3 && config.s3.persp !== undefined) {
-        currentTransform.perspective = config.s3.persp;
-        currentTransform.rotateX = config.s3.rotate;
-        currentTransform.scaleY = config.s3.scaleY;
+      if (config.s3) {
+        if (config.s3.persp !== undefined) currentTransform.perspective = config.s3.persp;
+        if (config.s3.rotate !== undefined) currentTransform.rotateX = config.s3.rotate;
+        if (config.s3.scaleY !== undefined) currentTransform.scaleY = config.s3.scaleY;
         
         updateTransformStyle();
       }
@@ -122,6 +123,7 @@
     // ==========================================
     socket.on('shake', (data) => {
       const startX = Math.random() * width;
+      // 下端から波紋が出る設定（回転軸が下になったので、手前から奥へ波が走るように見えます）
       const startY = height + WAVE_WIDTH / 2; 
 
       ripples.push({
