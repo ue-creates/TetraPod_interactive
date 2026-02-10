@@ -107,7 +107,7 @@
 
     function init() {
       width = canvas.width = window.innerWidth;
-      height = canvas.height = window.innerHeight;
+      height = canvas.height = window.innerHeight * HEIGHT_MULTIPLIER;
       
       dots = [];
       for (let x = GRID_SPACING / 2; x < width; x += GRID_SPACING) {
