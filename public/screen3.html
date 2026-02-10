@@ -9,7 +9,6 @@
         background-color: #000;
         margin: 0;
         overflow: hidden;
-        /* 👇 Screen 1と同様、変形コンテナを中央に置くための設定 */
         display: flex;
         justify-content: center;
         align-items: center;
@@ -17,72 +16,68 @@
         width: 100vw;
     }
 
-    /* 👇 変形させるためのラッパー */
+    /* 変形ラッパー */
     .screen-trapezoid {
       width: 100%;
       height: 100%;
       position: relative;
       
-      /* 👇 ここを変更: 回転軸を下端にする */
+      /* 下端を回転軸にする */
       transform-origin: bottom center;
       
-      /* 滑らかに動かす */
       transition: transform 0.1s linear; 
       will-change: transform;
+      
+      /* はみ出したドットも3D空間上で表示させるために visible に */
+      overflow: visible; 
     }
 
     canvas#dotCanvas {
         display: block;
         position: absolute;
-        top: 0; left: 0;
-        width: 100%; height: 150%;
+        
+        /* 👇 画面の下端に合わせて配置 */
+        bottom: 0; 
+        left: 0;
+        width: 100%;
+        
+        /* 👇 画面の2.5倍の高さを確保（奥に倒しても余白が出ないように） */
+        height: 250%; 
     }
   </style>
 </head>
 <body>
   
   <div class="screen-trapezoid">
-    
     <canvas id="dotCanvas"></canvas>
-
   </div>
 
   <script src="/socket.io/socket.io.js"></script>
   <script>
     const socket = io();
-    
-    // 変形用コンテナを取得
     const screenTrapezoid = document.querySelector('.screen-trapezoid');
 
     let currentConfig = { reactionColor: '#00ff00' };
     
-    // 📐 変形パラメータ
+    // 変形パラメータ
     let currentTransform = {
       perspective: 250,
       rotateX: -10,
       scaleY: 1.0
     };
 
-    // 初期スタイルの適用
     updateTransformStyle();
 
     function updateTransformStyle() {
-      // Screen 1 と同じロジック
       screenTrapezoid.style.transform = `perspective(${currentTransform.perspective}px) rotateX(${currentTransform.rotateX}deg) scale(1.0, ${currentTransform.scaleY})`;
     }
 
-    // ==========================================
-    // 📡 設定受信
-    // ==========================================
     socket.on('configUpdate', (config) => {
       currentConfig = config;
-
-      // 🟢 Screen 3 個別設定 (config.s3)
       if (config.s3) {
         if (config.s3.persp !== undefined) currentTransform.perspective = config.s3.persp;
         if (config.s3.rotate !== undefined) currentTransform.rotateX = config.s3.rotate;
         if (config.s3.scaleY !== undefined) currentTransform.scaleY = config.s3.scaleY;
-        
         updateTransformStyle();
       }
     });
@@ -95,18 +90,22 @@
 
     let width, height;
     
+    // 画面の何倍の高さを描画するか
+    const HEIGHT_MULTIPLIER = 2.5; 
+
     const GRID_SPACING = 40;      
     const BASE_DOT_RADIUS = 2;    
     const MAX_DOT_RADIUS_ADD = 6; 
     const WAVE_SPEED = 0.5;       
-    const WAVE_WIDTH = 120;   
-    const HEIGHT_MULTIPLIER = 1.5;    
+    const WAVE_WIDTH = 120;       
 
     let dots = [];    
     let ripples = []; 
 
     function init() {
       width = canvas.width = window.innerWidth;
+      
+      // 👇 高さも倍率分だけ確保する
       height = canvas.height = window.innerHeight * HEIGHT_MULTIPLIER;
       
       dots = [];
@@ -120,11 +119,11 @@
     init();
 
     // ==========================================
-    // 🌊 シェイク受信時の処理
+    // 🌊 シェイク受信
     // ==========================================
     socket.on('shake', (data) => {
       const startX = Math.random() * width;
-      // 下端から波紋が出る設定（回転軸が下になったので、手前から奥へ波が走るように見えます）
+      // 波紋の開始位置は「キャンバスの最下部（＝画面の最下部）」から
       const startY = height + WAVE_WIDTH / 2; 
 
       ripples.push({
@@ -135,9 +134,6 @@
       });
     });
 
-    // ==========================================
-    // 🛠️ 色変換用ユーティリティ (HEX -> RGBA)
-    // ==========================================
     function hexToRgba(hex, alpha) {
       let r = 255, g = 255, b = 255;
       if (hex && hex.startsWith('#')) {
@@ -154,7 +150,6 @@
     // 🎬 描画ループ
     // ==========================================
     function draw() {
-      // 背景クリア
       ctx.fillStyle = '#000';
       ctx.fillRect(0, 0, width, height);
       
@@ -182,14 +177,18 @@
             }
         });
 
-        ctx.beginPath();
-        ctx.arc(dot.x, dot.y, currentRadius, 0, Math.PI * 2);
-        
-        const finalAlpha = Math.min(1.0, 0.2 + alphaAdd);
-        ctx.fillStyle = hexToRgba(targetColor, finalAlpha);
-        ctx.fill();
+        // 描画最適化（画面外の小さなドットを描画しない等の処理を入れても良いが、今はシンプルに全描画）
+        if (currentRadius > 0) {
+            ctx.beginPath();
+            ctx.arc(dot.x, dot.y, currentRadius, 0, Math.PI * 2);
+            
+            const finalAlpha = Math.min(1.0, 0.2 + alphaAdd);
+            ctx.fillStyle = hexToRgba(targetColor, finalAlpha);
+            ctx.fill();
+        }
       });
 
+      // 波紋の寿命判定（キャンバスが長くなった分、消えるまでの距離も伸ばす）
       const maxDist = Math.sqrt(width * width + height * height) + WAVE_WIDTH;
       ripples = ripples.filter(ripple => {
           const elapsedTime = now - ripple.startTime;
