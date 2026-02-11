@@ -33,7 +33,12 @@
       z-index: 9999;
       display: flex;
       justify-content: center;
-      align-items: center;
+      
+      /* 👇 変更: 下揃えにする */
+      align-items: flex-end;
+      /* 👇 変更: 画面下端からの余白 */
+      padding-bottom: 50px;
+      box-sizing: border-box;
     }
 
     .dj-text-display {
@@ -54,6 +59,10 @@
       width: 1000px;
       height: 150px;
       
+      /* 👇 追加: 文字が長くても幅指定を強制的に守らせる設定 */
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis; /* はみ出たら「...」にする */
     }
   </style>
 </head>
@@ -150,7 +159,6 @@
       if (config.s1) {
         if (config.s1.name) djNameDisplay.innerText = config.s1.name;
         if (config.s1.nameHeight !== undefined) djNameDisplay.style.height = config.s1.nameHeight + 'px';
-        // 👇 追加: 幅変更
         if (config.s1.nameWidth !== undefined) djNameDisplay.style.width = config.s1.nameWidth + 'px';
 
         if (config.s1.masterScale !== undefined) currentTransform.masterScale = config.s1.masterScale;
