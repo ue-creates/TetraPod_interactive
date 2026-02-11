@@ -3,19 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <title>TetraPod Screen 1 (Book Fold)</title>
-
+  
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&display=swap" rel="stylesheet">
-
+  
   <link rel="stylesheet" href="css/style.css">
   <style>
-    /* Screen 2と同じスタイル定義 */
     body { margin: 0; padding: 0; background-color: #000; width: 100vw; height: 100vh; overflow: hidden; display: flex; justify-content: center; align-items: center; }
     
-    /* 3D変形エリア */
     .screen-book-wrapper { width: 100%; height: 100%; display: flex; perspective: 800px; position: relative; z-index: 1; }
-    
     .fold-panel { width: 50%; height: 100%; position: relative; overflow: hidden; will-change: transform; }
     .fold-L { transform-origin: right center; transform: rotateY(-20deg); z-index: 1; }
     .fold-R { transform-origin: left center; transform: rotateY(20deg); z-index: 1; }
@@ -29,7 +26,35 @@
     .center-circle { z-index: 10; position: absolute; }
     .visual-object { position: absolute; top: 0; left: 0; will-change: transform; }
 
-    .dj-text-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; display: flex; justify-content: center; align-items: center; }
+    .dj-text-overlay {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 9999;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .dj-text-display {
+      font-size: 80px;
+      text-align: center;
+      font-family: "Dela Gothic One", sans-serif;
+      font-weight: 900;
+      letter-spacing: 2px;
+      
+      background-color: white;
+      color: black;
+      
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      
+      /* 初期サイズ */
+      width: 1000px;
+      height: 150px;
+      
+    }
   </style>
 </head>
 <body>
@@ -69,9 +94,8 @@
 
     let currentConfig = { displayRatio: 1.0, displayDuration: 2000 };
     
-    // 変形用パラメータ
     let currentTransform = {
-      masterScale: 1.0, // New
+      masterScale: 1.0,
       foldAngle: 20,
       perspective: 800,
       scaleX: 1.0,
@@ -85,19 +109,14 @@
       const scale = currentTransform.scaleX || 1.0;
       const skew  = currentTransform.skewY || 0;
       const persp = currentTransform.perspective || 800;
-      const master = currentTransform.masterScale || 1.0; // New
+      const master = currentTransform.masterScale || 1.0;
 
       const skewL = skew * -1;
       const skewR = skew;
 
-      const angleL = angle * -1;
-      const angleR = angle;
-
-
-      panelL.style.transform = `rotateY(${angleL}deg) scaleX(${scale}) skewY(${skewL}deg)`;
-      panelR.style.transform = `rotateY(${angleR}deg) scaleX(${scale}) skewY(${skewR}deg)`;
+      panelL.style.transform = `rotateY(-${angle}deg) scaleX(${scale}) skewY(${skewL}deg)`;
+      panelR.style.transform = `rotateY(${angle}deg) scaleX(${scale}) skewY(${skewR}deg)`;
       
-      // 全体スケール適用
       bookWrapper.style.perspective = `${persp}px`;
       bookWrapper.style.transform = `scale(${master})`;
     }
@@ -129,9 +148,12 @@
       }
 
       if (config.s1) {
-        if (config.s1.name !== undefined) djNameDisplay.innerText = config.s1.name;
+        if (config.s1.name) djNameDisplay.innerText = config.s1.name;
+        if (config.s1.nameHeight !== undefined) djNameDisplay.style.height = config.s1.nameHeight + 'px';
+        // 👇 追加: 幅変更
+        if (config.s1.nameWidth !== undefined) djNameDisplay.style.width = config.s1.nameWidth + 'px';
 
-        if (config.s1.masterScale !== undefined) currentTransform.masterScale = config.s1.masterScale; // New
+        if (config.s1.masterScale !== undefined) currentTransform.masterScale = config.s1.masterScale;
         if (config.s1.fold !== undefined) currentTransform.foldAngle = config.s1.fold;
         if (config.s1.scaleX !== undefined) currentTransform.scaleX = config.s1.scaleX;
         if (config.s1.skewY !== undefined) currentTransform.skewY = config.s1.skewY;
