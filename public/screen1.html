@@ -122,9 +122,11 @@
 
       const skewL = skew * -1;
       const skewR = skew;
+      const angleL = angle * -1;
+      const angleR = angle;
 
-      panelL.style.transform = `rotateY(-${angle}deg) scaleX(${scale}) skewY(${skewL}deg)`;
-      panelR.style.transform = `rotateY(${angle}deg) scaleX(${scale}) skewY(${skewR}deg)`;
+      panelL.style.transform = `rotateY(${angleL}deg) scaleX(${scale}) skewY(${skewL}deg)`;
+      panelR.style.transform = `rotateY(${angleR}deg) scaleX(${scale}) skewY(${skewR}deg)`;
       
       bookWrapper.style.perspective = `${persp}px`;
       bookWrapper.style.transform = `scale(${master})`;
