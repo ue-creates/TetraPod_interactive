@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>TetraPod Control (Name Size)</title>
+  <title>TetraPod Control (Circle Toggle)</title>
   <style>
     /* 基本レイアウト */
     body { margin: 0; padding: 20px; background-color: #111; color: white; font-family: sans-serif; overflow-y: auto; min-height: 100vh; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; }
@@ -155,15 +155,16 @@
   <script>
     const socket = io();
 
+    // 👇 修正: フラグ付きのデータ構造に統一
     const djPresets = {
-      "01 松平健":        { s1: "Ferlinq",       s2: "oER4" },
-      "02 とらっぽいど":       { s1: "みそっぽいど",       s2: "えるっぽいど" },
-      "03 Kentaro × yn":    { s1: "Kentaro", s2: "yn" },
-      "04 欠員^2":  { s1: "kenken",    s2: "イツイツ" },
-      "05 METCH × wutsuri":        { s1: "METCH",     s2: "wutsuri" },
-      "06 KY Sound":   { s1: "Yakibird",      s2: "koc" },
-      "07 真島茂樹":       { s1: "真島茂樹",       s2: "真島茂樹" },
-      "LOADING...":            { s1: "LOADING...",  s2: "LOADING..." }
+      "01 松平健":          { s1: "Ferlinq",      s2: "oER4",       s1_l: true,  s2_l: true },
+      "02 とらっぽいど":    { s1: "みそっぽいど",  s2: "えるっぽいど", s1_l: true,  s2_l: true },
+      "03 Kentaro × yn":    { s1: "Kentaro",      s2: "yn",         s1_l: true,  s2_l: true },
+      "04 欠員^2":          { s1: "kenken",       s2: "イツイツ",    s1_l: true,  s2_l: true },
+      "05 METCH × wutsuri": { s1: "METCH",        s2: "wutsuri",    s1_l: true,  s2_l: true },
+      "06 KY Sound":        { s1: "Yakibird",     s2: "koc",        s1_l: true,  s2_l: true },
+      "07 真島茂樹":        { s1: "真島茂樹",      s2: "真島茂樹",    s1_l: false, s2_l: true },
+      "LOADING...":         { s1: "LOADING...",   s2: "LOADING...", s1_l: false, s2_l: false }
     };
 
     const el = (id) => document.getElementById(id);
@@ -181,14 +182,13 @@
       }
     };
 
-    // IDリストに nameWidth を追加
     const inputs = {
-      s1_nameWidth: 's1_nameWidth',   // New
+      s1_nameWidth: 's1_nameWidth',
       s1_nameHeight: 's1_nameHeight',
       s1_masterScale: 's1_masterScale',
       s1_fold: 's1_fold', s1_scaleX: 's1_scaleX', s1_skewY: 's1_skewY', s1_persp: 's1_persp',
       
-      s2_nameWidth: 's2_nameWidth',   // New
+      s2_nameWidth: 's2_nameWidth',
       s2_nameHeight: 's2_nameHeight',
       s2_masterScale: 's2_masterScale',
       s2_fold: 's2_fold', s2_scaleX: 's2_scaleX', s2_skewY: 's2_skewY', s2_persp: 's2_persp',
@@ -217,7 +217,7 @@
 
     socket.on('configUpdate', (config) => {
       if(config.s1) {
-        if(config.s1.nameWidth !== undefined) el('s1_nameWidth').value = config.s1.nameWidth; // New
+        if(config.s1.nameWidth !== undefined) el('s1_nameWidth').value = config.s1.nameWidth;
         if(config.s1.nameHeight !== undefined) el('s1_nameHeight').value = config.s1.nameHeight;
         if(config.s1.masterScale !== undefined) el('s1_masterScale').value = config.s1.masterScale;
         if(config.s1.fold !== undefined) el('s1_fold').value = config.s1.fold;
@@ -226,7 +226,7 @@
         if(config.s1.persp !== undefined) el('s1_persp').value = config.s1.persp;
       }
       if(config.s2) {
-        if(config.s2.nameWidth !== undefined) el('s2_nameWidth').value = config.s2.nameWidth; // New
+        if(config.s2.nameWidth !== undefined) el('s2_nameWidth').value = config.s2.nameWidth;
         if(config.s2.nameHeight !== undefined) el('s2_nameHeight').value = config.s2.nameHeight;
         if(config.s2.masterScale !== undefined) el('s2_masterScale').value = config.s2.masterScale;
         if(config.s2.fold !== undefined) el('s2_fold').value = config.s2.fold;
@@ -255,20 +255,30 @@
       const selectVal = presetSelect.value;
       let nameForS1 = "LOADING...";
       let nameForS2 = "LOADING...";
+      let showS1Circle = true; // デフォルトは表示
+      let showS2Circle = true; // デフォルトは表示
 
       if (selectVal === "custom") {
         const customText = customNameInput.value;
         nameForS1 = customText;
         nameForS2 = customText;
+        // カスタム入力時は両方表示としておく
+        showS1Circle = true;
+        showS2Circle = true;
       } else if (selectVal && djPresets[selectVal]) {
-        nameForS1 = djPresets[selectVal].s1;
-        nameForS2 = djPresets[selectVal].s2;
+        const p = djPresets[selectVal];
+        nameForS1 = p.s1;
+        nameForS2 = p.s2;
+        // プリセットからフラグを取得（未定義ならtrue）
+        showS1Circle = (p.s1_l !== undefined) ? p.s1_l : true;
+        showS2Circle = (p.s2_l !== undefined) ? p.s2_l : true;
       }
 
       const data = {
         s1: {
           name: nameForS1,
-          nameWidth: parseInt(el('s1_nameWidth').value), // New
+          circleVisible: showS1Circle, // 送信データに追加
+          nameWidth: parseInt(el('s1_nameWidth').value),
           nameHeight: parseInt(el('s1_nameHeight').value),
           masterScale: parseFloat(el('s1_masterScale').value),
           fold: parseInt(el('s1_fold').value),
@@ -278,7 +288,8 @@
         },
         s2: {
           name: nameForS2,
-          nameWidth: parseInt(el('s2_nameWidth').value), // New
+          circleVisible: showS2Circle, // 送信データに追加
+          nameWidth: parseInt(el('s2_nameWidth').value),
           nameHeight: parseInt(el('s2_nameHeight').value),
           masterScale: parseFloat(el('s2_masterScale').value),
           fold: parseInt(el('s2_fold').value),

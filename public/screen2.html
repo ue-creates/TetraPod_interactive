@@ -144,6 +144,8 @@
     }
     window.onload = preloadImages;
 
+    const centerCircles = document.querySelectorAll('.center-circle')
+
     socket.on('configUpdate', (config) => {
       currentConfig = config;
 
@@ -156,7 +158,11 @@
         if (config.s2.name) djNameDisplay.innerText = config.s2.name;
         if (config.s2.nameHeight !== undefined) djNameDisplay.style.height = config.s2.nameHeight + 'px';
         if (config.s2.nameWidth !== undefined) djNameDisplay.style.width = config.s2.nameWidth + 'px';
-
+        if (config.s2.circleVisible !== undefined) {
+           centerCircles.forEach(c => {
+             c.style.display = config.s2.circleVisible ? 'block' : 'none';
+           });
+        }
         if (config.s2.masterScale !== undefined) currentTransform.masterScale = config.s2.masterScale;
         if (config.s2.fold !== undefined) currentTransform.foldAngle = config.s2.fold;
         if (config.s2.scaleX !== undefined) currentTransform.scaleX = config.s2.scaleX;
