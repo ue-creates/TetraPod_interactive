@@ -278,24 +278,24 @@
         s1: {
           name: nameForS1,
           circleVisible: showS1Circle, // 送信データに追加
-          nameWidth: parseInt(el('s1_nameWidth').value),
-          nameHeight: parseInt(el('s1_nameHeight').value),
-          masterScale: parseFloat(el('s1_masterScale').value),
-          fold: parseInt(el('s1_fold').value),
-          scaleX: parseFloat(el('s1_scaleX').value),
-          skewY: parseInt(el('s1_skewY').value),
-          persp: parseInt(el('s1_persp').value)
+          nameWidth: parseInt(el('s1_nameWidth').value) || 400,
+          nameHeight: parseInt(el('s1_nameHeight').value) || 150,
+          masterScale: parseFloat(el('s1_masterScale').value) || 1.0,
+          fold: parseInt(el('s1_fold').value) || 20,
+          scaleX: parseFloat(el('s1_scaleX').value) || 1.0,
+          skewY: parseInt(el('s1_skewY').value) || 0,
+          persp: parseInt(el('s1_persp').value) || 800
         },
         s2: {
           name: nameForS2,
           circleVisible: showS2Circle, // 送信データに追加
-          nameWidth: parseInt(el('s2_nameWidth').value),
-          nameHeight: parseInt(el('s2_nameHeight').value),
-          masterScale: parseFloat(el('s2_masterScale').value),
-          fold: parseInt(el('s2_fold').value),
-          scaleX: parseFloat(el('s2_scaleX').value),
-          skewY: parseInt(el('s2_skewY').value),
-          persp: parseInt(el('s2_persp').value)
+          nameWidth: parseInt(el('s2_nameWidth').value) || 400,
+          nameHeight: parseInt(el('s2_nameHeight').value) || 150,
+          masterScale: parseFloat(el('s2_masterScale').value) || 1.0,
+          fold: parseInt(el('s2_fold').value) || 20,
+          scaleX: parseFloat(el('s2_scaleX').value) || 1.0,
+          skewY: parseInt(el('s2_skewY').value) || 0,
+          persp: parseInt(el('s2_persp').value) || 800
         },
         s3: {
           persp: parseInt(el('s3_persp').value),

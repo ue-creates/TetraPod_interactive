@@ -148,7 +148,7 @@
     }
     window.onload = preloadImages;
 
-    const centerCircle = document.querySelector('.center-circle');
+    const centerCircles = document.querySelectorAll('.center-circle');
 
     socket.on('configUpdate', (config) => {
       currentConfig = config;
@@ -163,9 +163,10 @@
         if (config.s1.nameHeight !== undefined) djNameDisplay.style.height = config.s1.nameHeight + 'px';
         if (config.s1.nameWidth !== undefined) djNameDisplay.style.width = config.s1.nameWidth + 'px';
         if (config.s1.circleVisible !== undefined) {
-          if (centerCircle) {
-            centerCircle.style.display = config.s1.circleVisible ? 'block' : 'none';
-          }
+             const isVisible = (config.s1.circleVisible === true || String(config.s1.circleVisible) === 'true');
+             centerCircles.forEach(c => {
+                 c.style.display = isVisible ? 'block' : 'none';
+             });
         }
         if (config.s1.masterScale !== undefined) currentTransform.masterScale = config.s1.masterScale;
         if (config.s1.fold !== undefined) currentTransform.foldAngle = config.s1.fold;

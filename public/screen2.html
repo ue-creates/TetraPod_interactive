@@ -144,7 +144,7 @@
     }
     window.onload = preloadImages;
 
-    const centerCircles = document.querySelectorAll('.center-circle')
+    const centerCircles = document.querySelectorAll('.center-circle');
 
     socket.on('configUpdate', (config) => {
       currentConfig = config;
@@ -159,8 +159,9 @@
         if (config.s2.nameHeight !== undefined) djNameDisplay.style.height = config.s2.nameHeight + 'px';
         if (config.s2.nameWidth !== undefined) djNameDisplay.style.width = config.s2.nameWidth + 'px';
         if (config.s2.circleVisible !== undefined) {
+           const isVisible = (config.s2.circleVisible === true || String(config.s2.circleVisible) === 'true');
            centerCircles.forEach(c => {
-             c.style.display = config.s2.circleVisible ? 'block' : 'none';
+             c.style.display = isVisible ? 'block' : 'none';
            });
         }
         if (config.s2.masterScale !== undefined) currentTransform.masterScale = config.s2.masterScale;
