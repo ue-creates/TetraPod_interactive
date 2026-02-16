@@ -171,7 +171,7 @@ body {
   
   /* 文字のデザインのみ残す */
   font-family: "Dela Gothic One", sans-serif;
-  font-weight: 900;
+  font-weight: 0;
   letter-spacing: 2px;
   
   /* デフォルトの色 */
