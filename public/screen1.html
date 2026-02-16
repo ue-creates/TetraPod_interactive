@@ -164,9 +164,12 @@
         if (config.s1.nameWidth !== undefined) djNameDisplay.style.width = config.s1.nameWidth + 'px';
         if (config.s1.circleVisible !== undefined) {
              const isVisible = (config.s1.circleVisible === true || String(config.s1.circleVisible) === 'true');
+             const displayVal = isVisible ? 'block' : 'none';
              centerCircles.forEach(c => {
-                 c.style.display = isVisible ? 'block' : 'none';
+                 c.style.display = displayVal;
              });
+             if (glowL) glowL.style.display = displayVal;
+             if (glowR) glowR.style.display = displayVal;
         }
         if (config.s1.masterScale !== undefined) currentTransform.masterScale = config.s1.masterScale;
         if (config.s1.fold !== undefined) currentTransform.foldAngle = config.s1.fold;

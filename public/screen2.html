@@ -160,9 +160,12 @@
         if (config.s2.nameWidth !== undefined) djNameDisplay.style.width = config.s2.nameWidth + 'px';
         if (config.s2.circleVisible !== undefined) {
            const isVisible = (config.s2.circleVisible === true || String(config.s2.circleVisible) === 'true');
+           const displayVal = isVisible ? 'block' : 'none';
            centerCircles.forEach(c => {
-             c.style.display = isVisible ? 'block' : 'none';
+             c.style.display = displayVal;
            });
+           if (glowL) glowL.style.display = displayVal;
+           if (glowR) glowR.style.display = displayVal;
         }
         if (config.s2.masterScale !== undefined) currentTransform.masterScale = config.s2.masterScale;
         if (config.s2.fold !== undefined) currentTransform.foldAngle = config.s2.fold;
