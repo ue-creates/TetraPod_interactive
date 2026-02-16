@@ -31,8 +31,10 @@
     <div class="btn-grid">
       <button class="reaction-btn" onclick="sendReaction(1)">🔥</button>
       <button class="reaction-btn" onclick="sendReaction(2)">❤️</button>
-      <button class="reaction-btn" onclick="sendReaction(3)">🙌</button>
-      <button class="reaction-btn" onclick="sendReaction(4)">🎉</button>
+      <button class="reaction-btn" onclick="sendReaction(3)">⭐</button>
+      <button class="reaction-btn" onclick="sendReaction(4)">
+        <img src="img/tetrapod001logo-1.svg" alt="Party" style="width: 50%; height: 100%; object-fit: contain;">
+      </button>
     </div>
   </div>
 
@@ -63,7 +65,7 @@
     // 【調整パラメータ】
     const MIN_FORCE = 8;   // ノイズ除去の閾値（これ以下の揺れは無視＝タイピング対策）
     const DECAY_RATE = 2;  // 減衰スピード（振るのをやめたらどれくらい早く0に戻るか）
-    const COOL_DOWN = 800; // 発火後の不感時間
+    const COOL_DOWN = 400; // 発火後の不感時間
     
     let lastFireTime = 0;
 
