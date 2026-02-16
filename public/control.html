@@ -122,7 +122,7 @@
         <option value="05 METCH × wutsuri">05 METCH × wutsuri</option>
         <option value="06 KY Sound">06 KY Sound</option>
         <option value="07 真島茂樹">07 真島茂樹</option>
-        <option value="WAITING..." selected>LOADING...</option>
+        <option value="LOADING..." selected>LOADING...</option>
         <option value="custom">📝 Custom / Free Input...</option>
       </select>
       
@@ -253,8 +253,8 @@
     el('applyBtn').addEventListener('click', () => {
       
       const selectVal = presetSelect.value;
-      let nameForS1 = "WAITING...";
-      let nameForS2 = "WAITING...";
+      let nameForS1 = "LOADING...";
+      let nameForS2 = "LOADING...";
 
       if (selectVal === "custom") {
         const customText = customNameInput.value;
