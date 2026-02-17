@@ -21,11 +21,6 @@
     <div style="padding: 10px;">
       <button id="permissionBtn" style="padding: 10px; display:none;">センサー許可 (iOS)</button>
       <p id="statusText" style="font-size: 12px; color: #888;">Shake your phone!</p>
-      
-      <!-- <div id="debug-panel">
-        Force: <span id="val-force">0</span><br>
-        Energy: <span id="val-energy">0</span> / Limit: <span id="val-limit">0</span>
-      </div> -->
     </div>
     
     <div class="btn-grid">
@@ -49,7 +44,6 @@
       currentConfig = config;
       // 管理画面の数値（15とか）だとこのロジックには小さすぎるかもしれないので補正
       // もし管理画面で「300」とか入れているならそのまま使う
-      document.getElementById('val-limit').innerText = currentConfig.shakeSensitivity;
     });
 
     function sendReaction(id) {
@@ -97,10 +91,6 @@
       shakeEnergy -= DECAY_RATE;
       if (shakeEnergy < 0) shakeEnergy = 0;
 
-      // --- デバッグ表示 ---
-      document.getElementById('val-force').innerText = force.toFixed(1);
-      document.getElementById('val-energy').innerText = shakeEnergy.toFixed(0);
-      
       // 4. 判定
       // 管理画面の数値を「満タン」の基準にする
       // 目安: 50〜100くらいが適正範囲になるはず
