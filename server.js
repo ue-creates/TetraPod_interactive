@@ -4,7 +4,14 @@ const { Server } = require('socket.io');
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server);
+
+// CORSの設定を追加（TouchDesignerからの接続を弾かないようにするため）
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"]
+  }
+});
 
 app.use(express.static('public', {
   extensions: ['html'] 
@@ -14,26 +21,25 @@ app.use(express.static('public', {
 let config = {
   reactionColor: '#00ff00',
   shakeSensitivity: 80,
-  displayDuration: 2000, // デフォルトを少し長めに(2秒)
+  displayDuration: 2000,
   djNameText: 'DJ TETRAPOD',
-  displayRatio: 1.0 // 👈 追加: 表示割合 (0.0 〜 1.0)
+  displayRatio: 1.0
 };
 
 io.on('connection', (socket) => {
+  console.log('クライアントが接続しました:', socket.id);
+  
   // 接続時に現在の設定を送る
   socket.emit('configUpdate', config);
 
-  // リアクションを受信 -> 画面1, 2へ転送
+  // リアクションを受信 -> TouchDesignerを含む全クライアントへ転送
   socket.on('reaction', (data) => {
-    // data = { id: 1~4 }
     io.emit('reactionTrigger', data);
   });
 
-  // シェイクを受信 -> 画面3へ転送
+  // シェイクを受信 -> TouchDesignerを含む全クライアントへ転送
   socket.on('shake', (data) => {
-    // 受け取ったシェイク信号を、他の全員(スクリーン含む)に転送する
     io.emit('shake', data); 
-    // または socket.broadcast.emit('shake', data);
   });
 
   // 設定変更を受信 -> 全員へ共有
@@ -41,10 +47,14 @@ io.on('connection', (socket) => {
     config = { ...config, ...newConfig };
     io.emit('configUpdate', config);
   });
+
+  socket.on('disconnect', () => {
+    console.log('クライアントが切断しました:', socket.id);
+  });
 });
 
-// 環境変数 PORT があればそれを使い、なければ 3000 を使う
-const port = process.env.PORT || 3000;
+// 環境変数 PORT があればそれを使い、なければ 10000 を使う（NeoShowcaseのNetwork Portに合わせる）
+const port = process.env.PORT || 10000;
 
 server.listen(port, () => {
   console.log(`TetraPod server running on port ${port}`);
