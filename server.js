@@ -54,7 +54,7 @@ io.on('connection', (socket) => {
 });
 
 // 環境変数 PORT があればそれを使い、なければ 10000 を使う（NeoShowcaseのNetwork Portに合わせる）
-const port = process.env.PORT || 10000;
+const port = process.env.PORT || 3000;
 
 server.listen(port, () => {
   console.log(`TetraPod server running on port ${port}`);
