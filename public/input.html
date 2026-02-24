@@ -6,21 +6,114 @@
   <title>TetraPod Input</title>
   <link rel="stylesheet" href="css/style.css">
   <style>
-    /* デバッグ表示用スタイル */
-    #debug-panel {
-      font-size: 10px;
-      color: #555;
+    /* 画面全体をスクロールさせない設定 */
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
+      background-color: #1a1a1a;
+      font-family: sans-serif;
+    }
+
+    /* 全体を縦並びにして画面にフィット */
+    .container {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      height: 100dvh;
+      padding: 15px;
+      box-sizing: border-box;
+    }
+
+    /* ヘッダー部分 */
+    .header-section {
+      flex: 0 0 auto;
+      text-align: center;
       margin-bottom: 10px;
-      font-family: monospace;
-      line-height: 1.2;
+    }
+
+    /* ボタンエリア */
+    .btn-grid {
+      flex: 1 1 auto;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      grid-template-rows: repeat(2, 1fr);
+      gap: 15px; /* 👈 ここの隙間とテキストボックスの隙間を合わせます */
+      margin-bottom: 15px;
+      width: 100%; /* 横幅を明示的に100%に */
+    }
+
+    .reaction-btn {
+      width: 100%;
+      height: 100%;
+      margin: 0; /* ブラウザデフォルトの余白を消去 */
+      font-size: 3rem;
+      border-radius: 16px;
+      border: none;
+      background-color: #333;
+      color: white;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background-color 0.1s, transform 0.1s;
+    }
+    .reaction-btn:active {
+      background-color: #555;
+      transform: translateY(4px);
+      box-shadow: 0 0px 2px rgba(0,0,0,0.3);
+    }
+
+    /* 👇 ピッタリ揃えるためのテキスト入力エリア設定 */
+    .text-input-container {
+      flex: 0 0 auto;
+      display: flex;
+      gap: 15px; /* btn-grid と同じ隙間を指定して統一感を出す */
+      width: 100%; /* 横幅をコンテナの限界まで広げる */
+      margin-bottom: env(safe-area-inset-bottom, 15px);
+      box-sizing: border-box;
+    }
+    
+    #messageInput {
+      flex-grow: 1; /* 残りの横幅をすべて使う */
+      width: 100%;
+      min-width: 0; /* 文字が長くなってもレイアウトを壊さない魔法 */
+      margin: 0; /* スマホ特有の謎マージンを消す */
+      padding: 15px;
+      font-size: 16px;
+      border-radius: 12px;
+      border: 1px solid #444;
+      background-color: #222;
+      color: white;
+      box-sizing: border-box;
+    }
+    
+    .send-btn {
+      flex: 0 0 auto; /* ボタンが伸び縮みしないように固定 */
+      margin: 0; /* スマホ特有の謎マージンを消す */
+      padding: 15px 20px;
+      font-size: 16px;
+      font-weight: bold;
+      border-radius: 12px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+      white-space: nowrap; /* 「送信」の文字が改行されないようにする */
+      box-sizing: border-box;
+    }
+    .send-btn:active {
+      background-color: #0056b3;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <div style="padding: 10px;">
-      <button id="permissionBtn" style="padding: 10px; display:none;">センサー許可 (iOS)</button>
-      <p id="statusText" style="font-size: 12px; color: #888;">Shake your phone!</p>
+    <div class="header-section">
+      <button id="permissionBtn" style="padding: 10px; display:none; margin: 0 auto 10px;">センサー許可 (iOS)</button>
+      <p id="statusText" style="font-size: 14px; color: #888; margin: 0;">Shake your phone!</p>
     </div>
     
     <div class="btn-grid">
@@ -31,19 +124,20 @@
         <img src="img/tetrapod001logo-1.svg" alt="Party" style="width: 50%; height: 100%; object-fit: contain;">
       </button>
     </div>
+
+    <div class="text-input-container">
+      <input type="text" id="messageInput" placeholder="メッセージを入力...">
+      <button class="send-btn" onclick="sendMessage()">送信</button>
+    </div>
   </div>
 
   <script src="/socket.io/socket.io.js"></script>
   <script>
     const socket = io();
-    // デフォルト感度設定（管理画面の値が来るまでの初期値）
-    // 数値が大きいほど「たくさん振らないと」反応しない
     let currentConfig = { shakeSensitivity: 60 }; 
 
     socket.on('configUpdate', (config) => {
       currentConfig = config;
-      // 管理画面の数値（15とか）だとこのロジックには小さすぎるかもしれないので補正
-      // もし管理画面で「300」とか入れているならそのまま使う
     });
 
     function sendReaction(id) {
@@ -51,15 +145,29 @@
       if (navigator.vibrate) navigator.vibrate(50);
     }
 
-    // --- 👇 エネルギー蓄積型シェイク検知ロジック 👇 ---
+    function sendMessage() {
+      const input = document.getElementById('messageInput');
+      const text = input.value.trim(); 
+      
+      if (text !== '') {
+        socket.emit('textMessage', { text: text });
+        input.value = ''; 
+        if (navigator.vibrate) navigator.vibrate(50);
+      }
+    }
+
+    // document.getElementById('messageInput').addEventListener('keypress', function (e) {
+    //   if (e.key === 'Enter') {
+    //     sendMessage();
+    //   }
+    // });
 
     let gravity = { x: 0, y: 0, z: 0 };
-    let shakeEnergy = 0; // バケツの水量
+    let shakeEnergy = 0; 
     
-    // 【調整パラメータ】
-    const MIN_FORCE = 8;   // ノイズ除去の閾値（これ以下の揺れは無視＝タイピング対策）
-    const DECAY_RATE = 2;  // 減衰スピード（振るのをやめたらどれくらい早く0に戻るか）
-    const COOL_DOWN = 400; // 発火後の不感時間
+    const MIN_FORCE = 8;   
+    const DECAY_RATE = 2;  
+    const COOL_DOWN = 400; 
     
     let lastFireTime = 0;
 
@@ -67,43 +175,32 @@
       const acc = event.accelerationIncludingGravity;
       if (!acc) return;
 
-      // 1. 重力成分の抽出 (簡易ローパスフィルタ)
       const alpha = 0.8;
       gravity.x = alpha * gravity.x + (1 - alpha) * acc.x;
       gravity.y = alpha * gravity.y + (1 - alpha) * acc.y;
       gravity.z = alpha * gravity.z + (1 - alpha) * acc.z;
 
-      // 2. 重力を除去して「動き」だけの力を計算
       const x = acc.x - gravity.x;
       const y = acc.y - gravity.y;
       const z = acc.z - gravity.z;
       
-      // 瞬間の力 (Force)
       const force = Math.sqrt(x*x + y*y + z*z);
 
-      // 3. エネルギー蓄積ロジック
       if (force > MIN_FORCE) {
-        // 閾値を超えた強い力だけをエネルギーとして足す
         shakeEnergy += force;
       }
       
-      // 常にエネルギーを減らす（減衰）
       shakeEnergy -= DECAY_RATE;
       if (shakeEnergy < 0) shakeEnergy = 0;
 
-      // 4. 判定
-      // 管理画面の数値を「満タン」の基準にする
-      // 目安: 50〜100くらいが適正範囲になるはず
       const limit = currentConfig.shakeSensitivity || 60; 
       const now = Date.now();
 
       if (shakeEnergy > limit && (now - lastFireTime > COOL_DOWN)) {
-        // 発火！
         socket.emit('shake', { intensity: shakeEnergy });
         lastFireTime = now;
-        shakeEnergy = 0; // バケツを空にする
+        shakeEnergy = 0; 
 
-        // フィードバック
         const statusText = document.getElementById('statusText');
         statusText.innerText = "SHAKE DETECTED!!";
         statusText.style.color = "#fff";
@@ -118,7 +215,6 @@
       }
     }
 
-    // iOS 13+ 権限リクエスト
     const btn = document.getElementById('permissionBtn');
     if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
       btn.style.display = 'block';
