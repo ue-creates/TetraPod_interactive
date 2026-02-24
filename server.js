@@ -38,9 +38,9 @@ io.on('connection', (socket) => {
   });
 
   // スマホからのシェイクを受信 -> TouchDesignerを含む全クライアントへ転送
-  socket.on('shake', (data) => {
-    io.emit('shake', data); 
-  });
+  // socket.on('shake', (data) => {
+  //   io.emit('shake', data); 
+  // });
 
   socket.on('textMessage', (data) => {
     io.emit('textMessage', data);
