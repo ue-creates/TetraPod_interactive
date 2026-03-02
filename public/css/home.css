@@ -40,38 +40,50 @@ img {
     position: relative;
     width: 100%;
     max-width: 1920px;
-    /* 👇 魔法の記述: 幅と高さの比率を固定する */
+    /* � 魔法の記述: 幅と高さの比率を固定する */
     aspect-ratio: 1920 / 2798;
     margin: 0 auto;
     background-color: #000;
-    overflow: hidden;
+    /* スクロール可能にするために制限を解除 */
+    overflow: visible;
+    aspect-ratio: auto;
+  }
+
+  /* 上部の絶対配置要素の位置を確保するためのスペース */
+  .home-container::before {
+    content: "";
+    display: block;
+    width: 100%;
+    /* 高さ基準の35.3%相当を幅基準に変換して確保 (51.5%) */
+    padding-top: 51.5%;
   }
 
   /* --- Header --- */
   .header-text {
     position: absolute;
-    /* 元の座標(120px) / 高さ(2798px) * 100 ≒ 4.3% */
-    top: 4.3%; 
-    left: 7.3%; /* 140px / 1920px ≒ 7.3% */
+    /* top: 4.3% -> 幅基準(vw)に変換すると 4.3% * 1.457 ≒ 6.3% */
+    top: 6.3vw; 
+    left: 7.3%; 
     font-family: 'Lexend Mega', sans-serif;
     font-weight: 300;
-    /* 文字サイズを画面幅連動(vw)にする */
     font-size: clamp(16px, 1.6vw, 32px);
     letter-spacing: -0.1em;
   }
 
   .hero-image-sub {
     position: absolute;
-    top: 6.2%; left: 7.3%;
-    width: 52%; /* 1000px / 1920px */
+    /* top: 6.2% -> 9.0% */
+    top: 9vw; left: 7.3%;
+    width: 52%; 
     z-index: 2;
   }
 
   /* --- Hero --- */
   .hero-image-main {
     position: absolute;
-    top: 6.2%; left: 39.5%; /* 759px / 1920px */
-    width: 53.1%; /* 1020px / 1920px */
+    /* top: 6.2% -> 9.0% */
+    top: 9vw; left: 39.5%; 
+    width: 53.1%; 
     object-fit: cover;
     z-index: 1;
   }
@@ -79,71 +91,146 @@ img {
   /* --- Intro --- */
   .intro-text {
     position: absolute;
-    top: 27.7%; left: 7.3%;
+    /* top: 27.7% -> 40.4% */
+    top: 40.4vw; left: 7.3%;
     width: 30.3%;
     font-size: clamp(12px, 0.9vw, 18px);
     line-height: 1.7;
   }
 
   /* --- Banner & Title --- */
+  /* フローレイアウトに変更し、margin-bottomで隙間を制御 */
+  .event-banner-section {
+    /* ::beforeで十分な高さを確保したので、margin-topは不要 */
+    margin-top: 0;
+    /* 親要素いっぱい(画面幅またはmax1920px)に広げる */
+    width: 100%;
+    
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    /* ロゴとバナーの間隔 */
+    gap: 3%; 
+    
+    /* 👇 ここで organizer-section との隙間を調整できます */
+    margin-bottom: 10%; 
+  }
+
   .title-logo {
-    position: absolute;
-    top: 35.3%; left: 50%;
-    transform: translateX(-50%); /* 中央配置 */
-    width: 23.7%; /* 456px */
+    position: static;
+    transform: none;
+    /* 親のaタグに依存せず、画面幅に対する比率と最大幅で指定する */
+    width: 23.7vw; 
+    max-width: 456px; /* 1920px * 0.237 */
     height: auto;
   }
 
   .event-banner {
-    position: absolute;
-    top: 39.2%; left: 50%;
-    transform: translateX(-50%);
-    width: 31.1%; /* 598px */
+    position: static;
+    transform: none;
+    /* 親のaタグに依存せず、画面幅に対する比率と最大幅で指定する */
+    width: 31.1vw;
+    max-width: 598px; /* 1920px * 0.311 */
     height: auto;
     object-fit: cover;
   }
 
+  /* --- Archive --- */
+  .archive-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 10%;
+  }
+
+  .archive-title {
+    position: static;
+    transform: none;
+    font-family: 'Lexend Mega', sans-serif;
+    font-weight: 700;
+    font-size: clamp(32px, 3.3vw, 64px);
+    letter-spacing: -0.05em;
+    margin-bottom: 1%;
+    text-align: center;
+  }
+
+  .archive-name {
+    position: static;
+    transform: none;
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: clamp(16px, 1.6vw, 32px);
+    text-align: center;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+
   /* --- Organizer --- */
+  .organizer-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    /* 👇 ここでサイト下部の余白（Footerまでの距離）を制御します */
+    padding-bottom: 5%;
+  }
+
   .organizer-title {
-    position: absolute;
-    top: 73.7%; left: 50%;
-    transform: translateX(-50%);
+    position: static;
+    transform: none;
+    margin-bottom: 1%; /* タイトル下の隙間 */
+    
     font-weight: 900;
     font-size: clamp(32px, 3.3vw, 64px);
     white-space: nowrap;
+    text-align: center;
   }
 
   .organizer-name {
-    position: absolute;
-    top: 77.8%; left: 50%;
-    transform: translateX(-50%);
+    position: static;
+    transform: none;
+    margin-bottom: 2.5%; /* 名前下の隙間 */
+    
     font-weight: 900;
     font-size: clamp(16px, 1.6vw, 32px);
     white-space: nowrap;
+    text-align: center;
+  }
+
+  /* 白いボックス部分をFlexコンテナ化 */
+  .organizer-content-wrapper {
+    position: relative;
+    width: 85.4%; /* 1640px */
+    background-color: white; /* .organizer-box の代わり */
+    
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    
+    padding: 3% 0; /* ボックス内の上下余白 */
+    gap: 1.5%;   /* ロゴと説明文の間隔 */
   }
 
   .organizer-box {
-    position: absolute;
-    top: 81%; left: 50%;
-    transform: translateX(-50%);
-    width: 85.4%; /* 1640px */
-    height: 9.6%; /* 269px */
-    background-color: white;
+    /* 親要素のbackground-colorで代用するため非表示 */
+    display: none;
   }
 
   .organizer-box-logo {
-    position: absolute;
-    top: 82.3%; left: 34.6%; /* 665px */
-    width: 28.1%; /* 541px */
+    position: static;
+    transform: none;
+    
+    width: 33%; /* ボックス幅に対する比率として調整 */
     height: auto;
     z-index: 2;
   }
 
   .organizer-desc {
-    position: absolute;
-    top: 86.1%; left: 50%;
-    transform: translateX(-50%);
-    width: 47.2%; /* 907px */
+    position: static;
+    transform: none;
+    
+    width: 55%; /* テキスト幅 */
     color: black;
     font-size: clamp(10px, 0.9vw, 18px);
     line-height: 1.7;
@@ -152,42 +239,50 @@ img {
   }
 
   /* --- Footer --- */
-  .footer-bg {
-    position: absolute;
-    left: 0; bottom: 0;
-    width: 100%; 
-    height: 5%; /* 141px */
+  /* Organizerの下に配置されるように調整 */
+  .footer-section {
+    position: relative;
+    width: 100%;
+    /* 高さは内部コンテンツによって決まるようにする、あるいはデザインに合わせて固定 */
+    height: 141px; 
     background-color: #002040;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 4%; /* 左右の余白 */
+    box-sizing: border-box;
+  }
+
+  .footer-bg {
+    display: none; /* .footer-section 自体に背景色をつけるので不要 */
   }
 
   .footer-links {
-    position: absolute;
-    bottom: 1.7%; /* 48px */
-    left: 28.2%; /* 542px */
+    position: static; /* 絶対配置解除 */
     display: flex;
-    gap: clamp(20px, 12.5vw, 80px);
+    gap: clamp(20px, 4vw, 80px); /* 画面幅に応じて可変 */
     z-index: 10;
+    margin-left: 5%; /* 左側のロゴとの距離調整 */
   }
   .footer-links a {
     font-size: clamp(12px, 1.25vw, 20px);
   }
 
   .footer-logo {
-    position: absolute;
-    bottom: 1.7%; left: 7.3%;
-    width: 15.8%; /* 304px */
+    position: static;
+    width: 304px; /* 固定幅またはvw単位に */
+    max-width: 20vw;
     height: auto;
     z-index: 10;
   }
 
   .copyright {
-    position: absolute;
-    bottom: 1.8%; 
-    right: 7.3%; /* 右寄せに変更して安定させる */
+    position: static;
     font-size: clamp(12px, 1.25vw, 16px);
     margin: 0;
     z-index: 10;
     color: rgba(255, 255, 255, 0.7);
+    margin-left: auto; /* 右端に寄せる */
   }
 }
 
@@ -275,6 +370,32 @@ img {
     position: static; 
     transform: none; 
     margin: 0 auto; 
+  }
+
+  /* Archive Section */
+  .archive-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 20px;
+    margin-bottom: 60px;
+  }
+  
+  .archive-title {
+    font-family: 'Lexend Mega', sans-serif;
+    font-weight: 700;
+    font-size: 40px;
+    margin-bottom: 10px;
+    text-align: center;
+  }
+  
+  .archive-name {
+    font-family: 'Lexend Mega', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    text-align: center;
+    text-decoration: underline;
+    text-underline-offset: 4px;
   }
 
   /* Organizer Section */
