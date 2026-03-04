@@ -80,8 +80,13 @@ address, a[href^="tel"], a[href^="maps"] {
   box-sizing: border-box;
 }
 
+.fixed-header > a {
+  flex-shrink: 0;
+}
+
 .header-logo {
   width: clamp(150px, 15vw, 238px);
+  min-width: 150px;
   height: auto;
 }
 
@@ -102,12 +107,12 @@ address, a[href^="tel"], a[href^="maps"] {
    ========================================= */
 .bg-image-main {
   position: absolute;
-  top: 0;
+  top: 100px;
   left: 50%;
   transform: translateX(-50%); /* 左右中央揃え */
   
-  width: 100%;
-  max-width: 1920px; /* 原寸以上にはしない */
+  width: clamp(1000px, 160vw, 1920px);
+  max-width: none; /* グローバルのmax-width: 100%を解除 */
   
   z-index: 0; /* コンテンツより奥 */
   pointer-events: none;
@@ -189,7 +194,7 @@ section {
 
 .banner-img {
   width: 100%;
-  max-width: 598px;
+  max-width: 1000px;
   min-width: 280px;
   flex: 1 1 400px;
   border-radius: 4px;
@@ -234,7 +239,7 @@ section {
 /* グリッドレイアウト */
 .tt-cols-header, .tt-body-grid {
   display: grid;
-  grid-template-columns: 1fr 1.2fr 1.2fr;
+  grid-template-columns: max-content 1fr 1fr;
   width: 100%;
   max-width: 800px;
   padding: 0 10px;
@@ -247,7 +252,17 @@ section {
   text-align: center;
   align-items: end;
 }
-.tt-col-dummy { grid-column: 1; }
+.tt-col-dummy { 
+  grid-column: 1;
+  /* width指定ではなく、中身のテキストで見えないように幅を確保する */
+  visibility: hidden; 
+}
+.tt-col-dummy::before {
+  content: "00:00 - 00:00"; /* 幅確保用ダミーテキスト */
+  font-family: 'Lexend Mega', sans-serif;
+  font-size: clamp(16px, 2.5vw, 32px);
+  white-space: nowrap;
+}
 .tt-col-dj { grid-column: 2; font-family: 'Lexend Mega', sans-serif; font-weight: 700; font-size: clamp(16px, 2vw, 24px); }
 .tt-col-vj { grid-column: 3; font-family: 'Lexend Mega', sans-serif; font-weight: 700; font-size: clamp(16px, 2vw, 24px); }
 

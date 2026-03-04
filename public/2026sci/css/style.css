@@ -80,8 +80,13 @@ address, a[href^="tel"], a[href^="maps"] {
   box-sizing: border-box;
 }
 
+.fixed-header > a {
+  flex-shrink: 0;
+}
+
 .header-logo {
   width: clamp(150px, 15vw, 238px);
+  min-width: 150px;
   height: auto;
 }
 
@@ -102,12 +107,12 @@ address, a[href^="tel"], a[href^="maps"] {
    ========================================= */
 .bg-image-main {
   position: absolute;
-  top: 0;
+  top: 100px;
   left: 50%;
   transform: translateX(-50%); /* 左右中央揃え */
   
-  width: 100%;
-  max-width: 1920px; /* 原寸以上にはしない */
+  width: clamp(1000px, 160vw, 1920px);
+  max-width: none; /* グローバルのmax-width: 100%を解除 */
   
   z-index: 0; /* コンテンツより奥 */
   pointer-events: none;
